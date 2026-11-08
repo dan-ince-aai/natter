@@ -70,7 +70,7 @@ flowchart LR
    silicon, macOS 14.4+) and drag Natter to Applications.
 2. The first time, macOS may say it can't check the app (it isn't notarised yet): open **System Settings → Privacy &
    Security → Open Anyway**.
-3. Paste your [AssemblyAI API key](https://www.assemblyai.com/dashboard/signup) when Natter asks. It's kept in your
+3. Paste your [AssemblyAI API key](https://www.assemblyai.com/dashboard/api-keys) when Natter asks. It's kept in your
    Keychain, and usage is billed to your own account.
 4. To talk on calls or turn the original down, install the free BlackHole drivers once:
    `brew install blackhole-2ch blackhole-16ch`.
@@ -78,7 +78,7 @@ flowchart LR
 ## Build from source
 
 You need macOS 14.4 or later, the Xcode command line tools (`xcode-select --install`), Python 3.10+, and an
-[AssemblyAI API key](https://www.assemblyai.com/dashboard/signup).
+[AssemblyAI API key](https://www.assemblyai.com/dashboard/api-keys).
 
 ```sh
 brew install blackhole-2ch blackhole-16ch   # virtual audio devices: Talk's mic, and muting the original

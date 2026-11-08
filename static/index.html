@@ -200,7 +200,8 @@ body.native .top { height: 50px; padding: 0 14px 0 84px; }   /* room for the win
                box-shadow: 0 -2px 0 0 var(--line), 0 2px 0 0 var(--line), -2px 0 0 0 var(--line), 2px 0 0 0 var(--line); user-select: text; }
 .wcard input:focus { box-shadow: 0 -2px 0 0 var(--hear), 0 2px 0 0 var(--hear), -2px 0 0 0 var(--hear), 2px 0 0 0 var(--hear); }
 .wcard .row { display: flex; gap: 10px; justify-content: center; align-items: center; margin-top: 16px; }
-.wcard a { color: var(--gold); font-size: 13px; }
+.wcard a { font: 11px var(--tiny); letter-spacing: .04em; color: var(--bg); background: var(--gold); padding: 7px 12px; text-decoration: none; box-shadow: 0 -2px 0 0 var(--gold), 0 2px 0 0 var(--gold), -2px 0 0 0 var(--gold), 2px 0 0 0 var(--gold), 0 5px 0 0 var(--shadow); }
+.wcard a:hover { filter: brightness(1.08); }
 .wcard .err { color: var(--warn); font-size: 13px; min-height: 18px; margin-top: 10px; }
 
 /* ---- redesign: two cards ---- */
@@ -322,7 +323,7 @@ body.native .top { height: 50px; padding: 0 14px 0 84px; }   /* room for the win
     <label class="field"><span>Set up call apps automatically<small>Zoom, Meet and Slack pick up your translated voice</small></span><span class="sw"><input type="checkbox" id="auto-mic"><span></span></span></label>
   </div>
   <div class="gt">AssemblyAI</div>
-  <div class="group"><div class="brow"><span class="url" id="key-state"></span><button class="btn" id="change-key">Change key</button></div></div>
+  <div class="group"><div class="brow"><span class="url" id="key-state"></span><a class="btn" href="https://www.assemblyai.com/dashboard/api-keys" target="_blank" style="text-decoration:none">Your keys ↗</a><button class="btn" id="change-key">Change key</button></div></div>
   <div class="gt">Subtitles</div>
   <div class="group"><div class="brow"><span class="url">http://127.0.0.1:18765/captions?lane=all</span><button class="btn" id="open-subs">Open</button></div></div>
   <div class="gt">Advanced</div>
@@ -338,10 +339,10 @@ body.native .top { height: 50px; padding: 0 14px 0 84px; }   /* room for the win
 <div class="welcome" id="welcome"><div class="wcard">
   <canvas id="mascot-welcome" width="10" height="10"></canvas>
   <h2>WELCOME TO NATTER</h2>
-  <p>Natter uses AssemblyAI to hear, translate and speak. Paste your API key to start. It stays in your Mac's Keychain.</p>
+  <p>Natter uses AssemblyAI to hear, translate and speak. Copy your API key from your AssemblyAI dashboard (sign-up is free) and paste it here. It stays in your Mac's Keychain.</p>
   <input id="key-input" type="password" placeholder="Your AssemblyAI API key" spellcheck="false" autocomplete="off">
   <div class="err" id="key-err"></div>
-  <div class="row"><a href="https://www.assemblyai.com/dashboard/signup" target="_blank">Get a key</a><span class="spacer"></span><button class="btn" id="key-save">Save key</button></div>
+  <div class="row"><a href="https://www.assemblyai.com/dashboard/api-keys" target="_blank">Get a free key ↗</a><span class="spacer"></span><button class="btn" id="key-save">Save key</button></div>
 </div></div>
 <div class="welcome" id="style-modal"><div class="wcard">
   <h2>YOUR BRAND VOICE</h2>

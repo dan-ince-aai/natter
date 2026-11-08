@@ -19,7 +19,8 @@ people on your call hear *you* in theirs. Every voice is a little pixel critter 
 <p align="center"><img src="assets/showcase.png" alt="Natter: two language dials, You hear English and They hear you Español, with a voice critter on each side" width="100%"></p>
 
 <p align="center">
-  <a href="https://dan-ince-aai.github.io/natter/#video"><img src="assets/video-thumb.png" alt="Watch the 60-second Natter video" width="640"></a>
+  <a href="https://dan-ince-aai.github.io/natter/#video"><img src="assets/preview.gif" alt="Natter translating a Portuguese and English video call, with pixel critters" width="720"></a><br>
+  <a href="https://dan-ince-aai.github.io/natter/#video"><b>▶ Watch the full video with sound</b></a>
 </p>
 
 ## What you can do with it

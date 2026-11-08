@@ -2,7 +2,10 @@
 # Builds dist/Natter.dmg: a self-contained Natter.app (its own Python, the engine and the Swift helpers) for Apple
 # silicon Macs. Nothing outside the app is needed except the BlackHole drivers for Talk and for muting.
 #   ./package.sh            -> dist/Natter.app and dist/Natter.dmg
-# Signing: ad-hoc by default. Set SIGN_ID="Developer ID Application: …" to sign for distribution (then notarise).
+# Signing: ad-hoc by default, which macOS blocks on other Macs ("Open Anyway"). For a download that just opens:
+#   SIGN_ID="Developer ID Application: Your Team (TEAMID)" NOTARY_PROFILE=natter ./package.sh
+# NOTARY_PROFILE is a notarytool keychain profile, created once with:
+#   xcrun notarytool store-credentials natter --apple-id you@example.com --team-id TEAMID   (asks for an app-specific password)
 set -euo pipefail
 cd "$(dirname "$0")"
 VERSION="${VERSION:-0.1.1}"
@@ -51,14 +54,23 @@ cat > "$APP/Contents/Info.plist" <<PLIST
 PLIST
 
 # Sign every binary inside first, then the app.
+if [ "$SIGN_ID" = "-" ]; then SIGN_OPTS=(--timestamp=none); else SIGN_OPTS=(--timestamp --options runtime --entitlements packaging/entitlements.plist); fi
 find "$RES" -type f \( -name "*.so" -o -name "*.dylib" -o -perm -u+x \) -print0 | while IFS= read -r -d '' f; do
-  file -b "$f" | grep -q "Mach-O" && codesign --force --timestamp=none --sign "$SIGN_ID" "$f" >/dev/null 2>&1 || true
+  file -b "$f" | grep -q "Mach-O" && codesign --force "${SIGN_OPTS[@]}" --sign "$SIGN_ID" "$f" >/dev/null 2>&1 || true
 done
-codesign --force --timestamp=none --sign "$SIGN_ID" "$APP"
+codesign --force "${SIGN_OPTS[@]}" --sign "$SIGN_ID" "$APP"
 
 # The DMG opens as a pixel-art window: Natter on the left, Applications on the right, "drag Natter into Applications".
 # dmgbuild writes the window layout (.DS_Store) directly, no Finder scripting. Pinned, in its own venv.
 DMGVENV="$CACHE/dmgbuild-venv"
 [ -x "$DMGVENV/bin/dmgbuild" ] || { "$(command -v python3)" -m venv "$DMGVENV" && "$DMGVENV/bin/pip" install --quiet --disable-pip-version-check "dmgbuild==1.6.5"; }
 "$DMGVENV/bin/dmgbuild" -s packaging/dmg_settings.py -D app="$APP" "Natter" "$OUT/Natter.dmg" >/dev/null
+if [ "$SIGN_ID" != "-" ]; then
+  codesign --force --timestamp --sign "$SIGN_ID" "$OUT/Natter.dmg"
+  if [ -n "${NOTARY_PROFILE:-}" ]; then   # Apple checks it, then the ticket is stapled so it opens offline too
+    xcrun notarytool submit "$OUT/Natter.dmg" --keychain-profile "$NOTARY_PROFILE" --wait
+    xcrun stapler staple "$OUT/Natter.dmg"
+    spctl --assess --type open --context context:primary-signature -v "$OUT/Natter.dmg"
+  fi
+fi
 echo "Built $OUT/Natter.dmg ($(du -h "$OUT/Natter.dmg" | cut -f1)), app $(du -sh "$APP" | cut -f1)"

@@ -16,8 +16,6 @@
 call, a livestream, a video, a meeting) is spoken into your headphones in your language. Turn the right dial and the
 people on your call hear *you* in theirs. Every voice is a little pixel critter you can swap on the fly.
 
-<p align="center"><img src="assets/showcase.png" alt="Natter: two language dials, You hear English and They hear you Español, with a voice critter on each side" width="100%"></p>
-
 <p align="center">
   <a href="https://dan-ince-aai.github.io/natter/#video"><img src="assets/preview.gif" alt="Natter translating a Portuguese and English video call, with pixel critters" width="720"></a><br>
   <a href="https://dan-ince-aai.github.io/natter/#video"><b>▶ Watch the full video with sound</b></a>
@@ -43,8 +41,9 @@ calls ([how we worked it out](https://dan-ince-aai.github.io/natter/#hours)).
 
 1. [**Download Natter.dmg**](https://github.com/dan-ince-aai/natter/releases/latest/download/Natter.dmg) and drag
    Natter to Applications. (Apple silicon, macOS 14.4 or later.)
-2. Open it. If macOS says it can't check the app (it isn't notarised yet), go to **System Settings → Privacy &
-   Security → Open Anyway**.
+2. Open it. macOS will say it can't check the app (it isn't notarised yet). Click **Done**, then go to **System
+   Settings → Privacy & Security**, scroll down and click **Open Anyway**. Or, in Terminal:
+   `xattr -dr com.apple.quarantine /Applications/Natter.app`
 3. Paste your AssemblyAI API key ([get a free key](https://www.assemblyai.com/dashboard/api-keys)). It's kept in your
    Keychain.
 4. Turn a dial. Allow microphone and system audio when macOS asks.

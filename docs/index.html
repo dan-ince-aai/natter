@@ -149,6 +149,9 @@ footer a { color: var(--muted); text-decoration: none; } footer a:hover { color:
 .code pre { margin: 0; padding: 20px 22px; background: var(--shadow); color: var(--ink); font: 14px/1.6 ui-monospace, "SF Mono", Menlo, monospace; overflow-x: auto; -webkit-font-smoothing: antialiased; }
 .code .c { color: var(--faint); } .code .s { color: var(--hear); }
 .devctas { display: flex; gap: 18px; flex-wrap: wrap; margin-bottom: 20px; }
+
+.hero .sub { margin: 20px 0 0 !important; font-size: 15px; color: var(--faint) !important; }
+.hero .sub a { color: var(--muted); }
 </style>
 </head>
 <body>
@@ -163,23 +166,19 @@ footer a { color: var(--muted); text-decoration: none; } footer a:hover { color:
 
   <header class="hero">
     <div>
-      <div class="now"><i></i>AVAILABLE NOW · FREE FOR MAC</div>
       <h1>NATTER</h1>
       <h2>Hear anyone.<br>Speak their language.</h2>
       <p>Turn a dial and anything your Mac plays (a call, a stream, a video, a meeting) is spoken into your ears in your
         language. Turn the other and the people on your call hear you in theirs. Live, in any app.</p>
       <div class="ctas">
         <a class="btn" href="https://github.com/dan-ince-aai/natter/releases/latest/download/Natter.dmg">▼ Download free for Mac</a>
-        <a class="btn ghost" href="https://github.com/dan-ince-aai/natter">★ Star on GitHub</a>
       </div>
-      <p class="quick">Free download. Up and running in about a minute: open it, paste your AssemblyAI key, turn a dial.</p>
-      <div class="free"><b>≈ 50 HOURS FREE</b><span>New AssemblyAI accounts get $50 of credit, no card needed. <a href="#hours">How we worked it out</a></span></div>
-      <small>FREE · OPEN SOURCE (MIT) · macOS 14.4+ · APPLE SILICON · BRING YOUR OWN ASSEMBLYAI KEY</small>
+      <p class="sub">Free and open source · macOS 14.4+ · <a href="#hours">about 50 hours of translation free</a></p>
     </div>
     <div class="stage px" id="stage" aria-label="Pixel critters chatting in different languages while Natter translates between them"></div>
   </header>
 
-  <div class="video px"><video src="assets/natter-ad.mp4" poster="assets/poster.jpg" controls playsinline preload="metadata"></video></div>
+  <div class="video px" id="video"><video src="assets/natter-ad.mp4" poster="assets/poster.jpg" controls playsinline preload="metadata"></video></div>
 
   <section id="uses">
     <h3>WORKS WHEREVER YOUR MAC HAS SOUND</h3>

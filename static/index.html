@@ -26,6 +26,9 @@ canvas { image-rendering: pixelated; }
 
 .top { position: relative; z-index: 2; display: flex; align-items: center; padding: 16px 20px 0; }
 body.native .top { height: 50px; padding: 0 14px 0 84px; }   /* room for the window's traffic lights */
+/* The native window has an invisible drag strip over its top 50 px (launcher/main.swift); keep the settings
+   panel's Done button below it, or clicks there drag the window instead of pressing Done. */
+body.native .panel { padding-top: 64px; }
 .brand { font: 12px var(--tiny); text-transform: uppercase; color: var(--muted); display: flex; align-items: center; gap: 10px; letter-spacing: .06em; }
 .brand i { width: 8px; height: 8px; background: transparent; }
 .brand i.on { background: var(--hear); box-shadow: 0 0 0 2px rgba(var(--hear-rgb), .25); animation: blink 1s steps(2) infinite; }

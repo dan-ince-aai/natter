@@ -2,9 +2,13 @@
   <img src="assets/header.png" alt="Natter: real-time voice translation for anything on your Mac" width="100%">
 </p>
 
-<p align="center">
-  <a href="https://github.com/dan-ince-aai/natter/releases/latest/download/Natter.dmg"><img src="assets/download-button.png" alt="Download Natter free for Mac" width="420"></a>
-</p>
+<h3 align="center">Install free: paste this into Terminal</h3>
+
+```sh
+curl -fsSL https://dan-ince-aai.github.io/natter/install.sh | bash
+```
+
+<p align="center">Apple silicon, macOS 14.4+. Downloads, checks, installs and opens Natter (<a href="docs/install.sh">see the script</a>).</p>
 
 <p align="center">
   <a href="https://dan-ince-aai.github.io/natter/">Website</a> ·
@@ -39,23 +43,15 @@ calls ([how we worked it out](https://dan-ince-aai.github.io/natter/#hours)).
 
 ## Get started
 
-**Fastest:** paste this into Terminal. It downloads the latest Natter, checks it, installs it and opens it, with no
-security prompts ([see the script](docs/install.sh)):
+Paste this into Terminal. It downloads the latest Natter, checks it, installs it and opens it, with no security
+prompts ([see the script](docs/install.sh)):
 
 ```sh
 curl -fsSL https://dan-ince-aai.github.io/natter/install.sh | bash
 ```
 
-**Or download the app:**
-
-1. [**Download Natter.dmg**](https://github.com/dan-ince-aai/natter/releases/latest/download/Natter.dmg) and drag
-   Natter to Applications. (Apple silicon, macOS 14.4 or later.)
-2. Open it. macOS will say it can't check the app (it isn't notarised yet). Click **Done**, then go to **System
-   Settings → Privacy & Security**, scroll down and click **Open Anyway**. Or, in Terminal:
-   `/usr/bin/xattr -dr com.apple.quarantine /Applications/Natter.app`
-3. Paste your AssemblyAI API key ([get a free key](https://www.assemblyai.com/dashboard/api-keys)). It's kept in your
-   Keychain.
-4. Turn a dial. Allow microphone and system audio when macOS asks.
+Then paste your AssemblyAI API key when Natter asks ([get a free key](https://www.assemblyai.com/dashboard/api-keys)),
+allow microphone and system audio, and turn a dial. Needs an Apple silicon Mac with macOS 14.4 or later.
 
 To talk on calls, or to turn the original down while you listen, install the free BlackHole audio drivers once:
 `brew install blackhole-2ch blackhole-16ch`, then restart your Mac.
@@ -171,7 +167,7 @@ open Natter.app   # paste your AssemblyAI key when it asks
 
 ### Roadmap
 
-- A signed, notarised download (no "Open Anyway" step)
+- A signed, notarised app you can install by double-clicking
 - Sign in with AssemblyAI instead of pasting a key
 - More voices per language, and voices for more languages
 

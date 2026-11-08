@@ -36,7 +36,7 @@ nav a.l:hover { color: var(--gold); }
        box-shadow: 0 -4px 0 0 var(--hear), 0 4px 0 0 var(--hear), -4px 0 0 0 var(--hear), 4px 0 0 0 var(--hear), 0 10px 0 0 var(--shadow); transition: transform .08s steps(2); }
 .btn:hover { transform: translateY(-2px); } .btn:active { transform: translateY(2px); }
 .btn.ghost { color: var(--ink); background: var(--panel); box-shadow: 0 -4px 0 0 var(--line), 0 4px 0 0 var(--line), -4px 0 0 0 var(--line), 4px 0 0 0 var(--line), 0 10px 0 0 var(--shadow); }
-.hero { display: grid; grid-template-columns: 1.1fr .9fr; gap: 40px; align-items: center; padding: 40px 0 60px; }
+.hero { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, .9fr); gap: 40px; align-items: center; padding: 40px 0 60px; }
 .hero h1 { font: 76px/1 var(--tiny); margin: 0 0 18px; letter-spacing: .02em; text-shadow: 6px 6px 0 var(--shadow); }
 .hero h2 { font-size: 30px; font-weight: 600; margin: 0 0 14px; color: var(--gold); line-height: 1.2; }
 .hero p { color: var(--muted); margin: 0 0 28px; max-width: 520px; }
@@ -160,6 +160,15 @@ footer a { color: var(--muted); text-decoration: none; } footer a:hover { color:
 .oneline .cmd { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; }
 .oneline .cmd code { flex: 1; min-width: 260px; font-size: 15px; padding: 12px 14px; user-select: all; overflow-x: auto; white-space: nowrap; }
 .oneline .btn { padding: 10px 16px; font-size: 12px; }
+
+.install { margin-top: 6px; padding: 16px 18px 18px; background: var(--panel);
+           box-shadow: 0 -4px 0 0 var(--hear), 0 4px 0 0 var(--hear), -4px 0 0 0 var(--hear), 4px 0 0 0 var(--hear), 0 10px 0 0 var(--shadow); }
+.install b { display: block; font: 12px var(--tiny); color: var(--hear); letter-spacing: .06em; margin-bottom: 10px; }
+.install .cmd { display: flex; gap: 12px; align-items: center; }
+.install code { flex: 1; min-width: 0; font-size: 13.5px; padding: 11px 12px; user-select: all; overflow-x: auto; white-space: nowrap; }
+.install .btn { padding: 10px 14px; font-size: 12px; flex: none; }
+.hero > div, .install, .install .cmd { min-width: 0; }
+@media (max-width: 820px) { .hero { grid-template-columns: minmax(0, 1fr); } .install code { font-size: 12px; } }
 </style>
 </head>
 <body>
@@ -169,7 +178,7 @@ footer a { color: var(--muted); text-decoration: none; } footer a:hover { color:
     <span class="sp"></span>
     <a class="l" href="#install">Install</a><a class="l" href="#speakers">Voices</a><a class="l" href="#languages">Languages</a><a class="l" href="#developers">Developers</a>
 <a class="l" href="https://github.com/dan-ince-aai/natter">GitHub</a>
-    <a class="btn" style="padding:10px 14px;font-size:11px" href="https://github.com/dan-ince-aai/natter/releases/latest/download/Natter.dmg">▼ Download free</a>
+    <a class="btn" style="padding:10px 14px;font-size:11px" href="#install">▼ Install free</a>
   </nav>
 
   <header class="hero">
@@ -178,10 +187,11 @@ footer a { color: var(--muted); text-decoration: none; } footer a:hover { color:
       <h2>Hear anyone.<br>Speak their language.</h2>
       <p>Turn a dial and anything your Mac plays (a call, a stream, a video, a meeting) is spoken into your ears in your
         language. Turn the other and the people on your call hear you in theirs. Live, in any app.</p>
-      <div class="ctas">
-        <a class="btn" href="https://github.com/dan-ince-aai/natter/releases/latest/download/Natter.dmg">▼ Download free for Mac</a>
+      <div class="install">
+        <b>INSTALL FREE: PASTE INTO TERMINAL</b>
+        <div class="cmd"><code id="hcmd">curl -fsSL https://dan-ince-aai.github.io/natter/install.sh | bash</code><button class="btn" data-copy="hcmd">Copy</button></div>
       </div>
-      <p class="sub">Free and open source · macOS 14.4+ · <a href="#install">or install with one line</a> · <a href="#hours">about 50 hours free</a></p>
+      <p class="sub">Free and open source · macOS 14.4+ on Apple silicon · <a href="#hours">about 50 hours free</a></p>
     </div>
     <div class="stage px" id="stage" aria-label="Pixel critters chatting in different languages while Natter translates between them"></div>
   </header>
@@ -284,23 +294,22 @@ await tts.send(json.dumps({<span class="s">"type"</span>: <span class="s">"Gener
   </section>
 
   <section id="install">
-    <h3>FREE DOWNLOAD, READY IN A MINUTE</h3>
-    <p class="lead">You'll need an <a href="https://www.assemblyai.com/dashboard/api-keys">AssemblyAI API key</a>.</p>
-    <div class="oneline px"><div><b>FASTEST: PASTE THIS INTO TERMINAL</b><span>Downloads the latest Natter, checks it, installs it and opens it. No security prompts. <a href="install.sh">See the script</a></span></div>
+    <h3>INSTALL IN A MINUTE</h3>
+    <p class="lead">Apple silicon Mac, macOS 14.4 or later, and an <a href="https://www.assemblyai.com/dashboard/api-keys">AssemblyAI API key</a> (new accounts get about 50 hours free).</p>
+    <div class="oneline px" style="margin-bottom:26px"><div><b>PASTE THIS INTO TERMINAL</b></div>
       <div class="cmd"><code id="cmd">curl -fsSL https://dan-ince-aai.github.io/natter/install.sh | bash</code><button class="btn" id="copy">Copy</button></div></div>
-    <p class="lead" style="margin-top:26px">Or download the app:</p>
     <div class="steps">
-      <div class="step px"><h4>Download</h4><p>Open <code>Natter.dmg</code> and drag Natter to Applications. The first time, macOS says it can't check the app: click Done, then System Settings → Privacy &amp; Security → Open Anyway (or run <code>/usr/bin/xattr -dr com.apple.quarantine /Applications/Natter.app</code>).</p></div>
+      <div class="step px"><h4>Paste one line</h4><p>Open Terminal and paste the command above. It downloads the latest Natter, checks it, installs it into Applications and opens it. <a href="install.sh">See the script</a>.</p></div>
       <div class="step px"><h4>Paste your key</h4><p>Natter asks for your AssemblyAI key on first launch and keeps it in your Keychain. Allow microphone and system audio when asked.</p></div>
-      <div class="step px"><h4>Turn a dial</h4><p>That's it. To talk on calls, add the free BlackHole driver once: <code>brew install blackhole-2ch blackhole-16ch</code>.</p></div>
+      <div class="step px"><h4>Turn a dial</h4><p>That's it. To talk on calls, add the free audio drivers once: <code>brew install blackhole-2ch blackhole-16ch</code>.</p></div>
     </div>
   </section>
 
   <div class="final px">
-    <h3>DOWNLOAD NATTER FREE, TODAY.</h3>
+    <h3>INSTALL NATTER FREE, TODAY.</h3>
     <p>Free, open source and ready in about a minute. Bring your AssemblyAI key (new accounts get about 50 hours of translation free) and start understanding everyone.</p>
     <div style="display:flex;gap:18px;justify-content:center;flex-wrap:wrap">
-      <a class="btn" href="https://github.com/dan-ince-aai/natter/releases/latest/download/Natter.dmg">▼ Download free for Mac</a>
+      <a class="btn" href="#install">▼ Install free</a>
       <a class="btn ghost" href="https://github.com/dan-ince-aai/natter">View the code</a>
     </div>
   </div>
@@ -380,8 +389,11 @@ async function scene(k) {
 }
 (async () => { for (let k = 0; ; k = (k + 1) % PAIRS.length) await scene(k); })();
 document.querySelectorAll("canvas[data-flag]").forEach(c => flag(c, c.dataset.flag));
-const cp = document.getElementById("copy");
-if (cp) cp.onclick = async () => { try { await navigator.clipboard.writeText(document.getElementById("cmd").textContent); cp.textContent = "Copied!"; setTimeout(() => cp.textContent = "Copy", 1600); } catch { cp.textContent = "Select it"; } };
+document.getElementById("copy")?.setAttribute("data-copy", "cmd");
+document.querySelectorAll("[data-copy]").forEach(b => b.onclick = async () => {
+  try { await navigator.clipboard.writeText(document.getElementById(b.dataset.copy).textContent); b.textContent = "Copied!"; setTimeout(() => b.textContent = "Copy", 1600); }
+  catch { b.textContent = "Select it"; }
+});
 
 // "Every speaker gets their own voice": a meeting where each speaker is heard in their own critter voice.
 const SEATS = [

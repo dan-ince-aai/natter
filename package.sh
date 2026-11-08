@@ -5,7 +5,7 @@
 # Signing: ad-hoc by default. Set SIGN_ID="Developer ID Application: …" to sign for distribution (then notarise).
 set -euo pipefail
 cd "$(dirname "$0")"
-VERSION="${VERSION:-0.1.0}"
+VERSION="${VERSION:-0.1.1}"
 PY_TAG=20261020
 PY_NAME="cpython-3.12.15+${PY_TAG}-aarch64-apple-darwin-install_only.tar.gz"
 PY_SHA256=921fc822416bbad146b026d2051dbfe08338ce4144ced64c56afd899a4351752

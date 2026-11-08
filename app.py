@@ -116,8 +116,15 @@ DEFAULT_LANES = {
 }
 
 
+VERSION = "0.1.1"
+# Every request to AssemblyAI says it comes from Natter (and which version), so usage can be told apart from other
+# clients. No personal or device data is in it.
+USER_AGENT = f"Natter/{VERSION} (macOS; +https://github.com/dan-ince-aai/natter)"
+
+
 def ws_connect(url, headers, **kw):
     """websockets >= 14 takes additional_headers; older versions (legacy client) take extra_headers."""
+    kw.setdefault("user_agent_header", USER_AGENT)
     try:
         from websockets.asyncio.client import connect
         return connect(url, additional_headers=headers, **kw)
@@ -1127,7 +1134,7 @@ class Lane:
         t0 = self.final_at.get(turn, time.monotonic())
         try:
             if self.http is None or self.http.closed:
-                self.http = aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=20))
+                self.http = aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=20), headers={"User-Agent": USER_AGENT})
             async with self.http.post(GATEWAY_URL, json=body, headers={"Authorization": api_key()}) as r:
                 data = await r.json()
             if r.status >= 400:
@@ -1409,7 +1416,7 @@ async def set_key(req):
     if not key:
         return web.json_response({"ok": False, "error": "Paste your AssemblyAI API key."}, status=400)
     try:
-        async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=10)) as s:
+        async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=10), headers={"User-Agent": USER_AGENT}) as s:
             async with s.get("https://api.assemblyai.com/v2/transcript?limit=1", headers={"Authorization": key}) as r:
                 if r.status in (401, 403):
                     return web.json_response({"ok": False, "error": "That key wasn't accepted. Check it and try again."}, status=400)

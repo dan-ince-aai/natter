@@ -174,4 +174,6 @@ Issues and pull requests are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md).
 [MIT](LICENSE). Natter uses [AssemblyAI](https://www.assemblyai.com) for speech-to-text, translation (LLM Gateway) and
 text-to-speech; usage is billed to your own API key.
 
+Natter identifies itself in its requests to AssemblyAI with the user agent `Natter/<version>`. It contains no personal or device data.
+
 <p align="center"><img src="assets/mascot.png" width="80" alt="The Natter mascot"></p>

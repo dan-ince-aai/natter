@@ -56,7 +56,9 @@ find "$RES" -type f \( -name "*.so" -o -name "*.dylib" -o -perm -u+x \) -print0 
 done
 codesign --force --timestamp=none --sign "$SIGN_ID" "$APP"
 
-STAGE="$OUT/dmg"; mkdir -p "$STAGE"; cp -R "$APP" "$STAGE/"; ln -s /Applications "$STAGE/Applications"
-hdiutil create -quiet -volname "Natter" -srcfolder "$STAGE" -ov -format UDZO "$OUT/Natter.dmg"
-rm -rf "$STAGE"
+# The DMG opens as a pixel-art window: Natter on the left, Applications on the right, "drag Natter into Applications".
+# dmgbuild writes the window layout (.DS_Store) directly, no Finder scripting. Pinned, in its own venv.
+DMGVENV="$CACHE/dmgbuild-venv"
+[ -x "$DMGVENV/bin/dmgbuild" ] || { "$(command -v python3)" -m venv "$DMGVENV" && "$DMGVENV/bin/pip" install --quiet --disable-pip-version-check "dmgbuild==1.6.5"; }
+"$DMGVENV/bin/dmgbuild" -s packaging/dmg_settings.py -D app="$APP" "Natter" "$OUT/Natter.dmg" >/dev/null
 echo "Built $OUT/Natter.dmg ($(du -h "$OUT/Natter.dmg" | cut -f1)), app $(du -sh "$APP" | cut -f1)"

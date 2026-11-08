@@ -13,6 +13,12 @@
 call, a livestream, a video, a meeting) is spoken into your headphones in your language. Turn the right dial and the
 people on your call hear *you* in theirs. Every voice is a little pixel critter you can swap on the fly.
 
+<p align="center">
+  <a href="https://github.com/dan-ince-aai/natter/releases/latest/download/Natter.dmg"><b>▼ Download for Mac</b></a> ·
+  <a href="https://dan-ince-aai.github.io/natter/">Website</a> ·
+  <a href="docs/assets/natter-ad.mp4">Watch the 60-second video</a>
+</p>
+
 <p align="center"><img src="assets/screenshot.png" alt="The Natter window: two language dials, live waveforms and voice critters" width="420"></p>
 
 <img src="assets/divider.png" width="100%" alt="">
@@ -25,6 +31,20 @@ people on your call hear *you* in theirs. Every voice is a little pixel critter 
 | **Phone and VoIP** | Anything that plays through your Mac: softphones, WhatsApp desktop, browser dialers. |
 | **Livestreams and videos** | Dub a stream or a video live, with the original turned down to 10% underneath. |
 | **Meetings with several people** | Each speaker gets their own critter voice, so you can tell who's talking. |
+| **A global call centre** | Give every agent Natter and a brand voice, and take calls in languages nobody on the team speaks. |
+
+## Sound like you mean it
+
+Natter doesn't just translate words. Pick how *you* come across in their language: **Natural**, **Formal**, **Friendly**,
+or your own **Brand** voice: tone, words to use and avoid, product names kept exact. It never changes what you mean.
+
+| | |
+|---|---|
+| You say | "Yeah no worries mate, I can sort that refund out for you today, it's no big deal." |
+| They hear (natural) | "Sí, no te preocupes, amigo, puedo gestionar ese reembolso hoy mismo, no es nada." |
+| They hear (your brand voice) | "No se preocupe, podemos gestionar ese reembolso por usted hoy mismo. Nos alegra poder ayudarle." |
+
+*Real output from `gemini-2.5-flash-lite` via LLM Gateway, 8 November 2026.*
 
 ## How it works
 
@@ -44,7 +64,18 @@ flowchart LR
 - Translations always play in the order they were spoken and never overlap. If they fall behind, Natter shortens
   pauses and speeds the voice up (pitch kept) until it catches up.
 
-## Quick start
+## Download
+
+1. Download [**Natter.dmg**](https://github.com/dan-ince-aai/natter/releases/latest/download/Natter.dmg) (Apple
+   silicon, macOS 14.4+) and drag Natter to Applications.
+2. The first time, macOS may say it can't check the app (it isn't notarised yet): open **System Settings → Privacy &
+   Security → Open Anyway**.
+3. Paste your [AssemblyAI API key](https://www.assemblyai.com/dashboard/signup) when Natter asks. It's kept in your
+   Keychain, and usage is billed to your own account.
+4. To talk on calls or turn the original down, install the free BlackHole drivers once:
+   `brew install blackhole-2ch blackhole-16ch`.
+
+## Build from source
 
 You need macOS 14.4 or later, the Xcode command line tools (`xcode-select --install`), Python 3.10+, and an
 [AssemblyAI API key](https://www.assemblyai.com/dashboard/signup).
@@ -52,10 +83,11 @@ You need macOS 14.4 or later, the Xcode command line tools (`xcode-select --inst
 ```sh
 brew install blackhole-2ch blackhole-16ch   # virtual audio devices: Talk's mic, and muting the original
 git clone https://github.com/dan-ince-aai/natter.git && cd natter
-cp .env.example .env                        # then paste your AssemblyAI API key into .env
 ./build.sh                                  # builds the audio helpers and Natter.app
-open Natter.app
+open Natter.app                             # paste your AssemblyAI key when it asks
 ```
+
+`./package.sh` builds the self-contained download (`dist/Natter.dmg`) with its own Python inside.
 
 BlackHole drivers load when macOS restarts its audio service. If a BlackHole device doesn't show up after installing,
 restart your Mac (or run `sudo killall coreaudiod`).
@@ -70,8 +102,11 @@ permission for Natter. Allow both.
 - **The critters.** Drag the row under a dial to change voice, live, mid-conversation. Star a voice to keep it at the
   front. Natter remembers your voice for each language. With **a voice for each speaker** on, every new speaker gets
   their own critter, and you can pick theirs too.
-- **Settings** (top right): turn the original down while you listen (10%, 25% or silent), choose devices, and under
-  Advanced the speech model, translation model and the prompt itself.
+- **Original audio** (left card): full, 25%, 10% or muted while you listen. Full volume comes back when you turn the
+  dial to Off.
+- **Style** (right card): natural, formal, friendly, or your brand voice.
+- **Settings** (top right): devices, your API key, and under Advanced the speech model, translation model and the
+  prompt itself.
 - **Menu bar.** The globe icon switches Listen and Talk without the window, shows a click-through subtitle overlay
   above every app, and has **Restore sound**, which puts your Mac's output and mic back on your real devices.
 - **Subtitles for recording.** Add `http://127.0.0.1:18765/captions?lane=all` as an OBS Browser Source.
@@ -125,7 +160,8 @@ Natter is one Python file (`app.py`) plus small Swift helpers, so it's easy to b
 
 ## Roadmap
 
-- A signed, notarised download (no build step)
+- A signed, notarised download (no "Open Anyway" step)
+- Sign in with AssemblyAI instead of pasting a key
 - More voices per language, and voices for more languages
 - Speaking in smaller pieces as words arrive (we've prototyped it; it's waiting on faster partial transcripts)
 

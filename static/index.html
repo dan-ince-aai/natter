@@ -187,6 +187,62 @@ body.native .top { height: 50px; padding: 0 14px 0 84px; }   /* room for the win
 .toast.err { box-shadow: 0 -3px 0 0 var(--warn), 0 3px 0 0 var(--warn), -3px 0 0 0 var(--warn), 3px 0 0 0 var(--warn), 0 8px 0 0 var(--shadow); }
 
 @media (max-width: 540px) { :root { --item: 64px; --vstep: 58px; } .w-item { font-size: 27px; } .dials { grid-template-columns: 1fr 30px 1fr; padding: 0 12px 46px; } }
+
+/* first run: API key */
+.welcome { position: fixed; inset: 0; z-index: 70; display: none; align-items: center; justify-content: center; background: rgba(13,9,25,.82); }
+.welcome.show { display: flex; }
+.wcard { width: min(420px, calc(100vw - 40px)); padding: 26px 24px 22px; background: var(--panel); text-align: center;
+         box-shadow: 0 -4px 0 0 var(--gold), 0 4px 0 0 var(--gold), -4px 0 0 0 var(--gold), 4px 0 0 0 var(--gold), 0 10px 0 0 var(--shadow); }
+.wcard canvas { width: 80px; height: 80px; }
+.wcard h2 { margin: 10px 0 6px; font: 18px var(--tiny); color: var(--ink); letter-spacing: .04em; }
+.wcard p { margin: 0 0 16px; font-size: 14px; color: var(--muted); line-height: 1.45; }
+.wcard input { width: 100%; padding: 10px 12px; background: var(--shadow); border: 0; outline: none; font: 13px ui-monospace, "SF Mono", Menlo, monospace; color: var(--ink);
+               box-shadow: 0 -2px 0 0 var(--line), 0 2px 0 0 var(--line), -2px 0 0 0 var(--line), 2px 0 0 0 var(--line); user-select: text; }
+.wcard input:focus { box-shadow: 0 -2px 0 0 var(--hear), 0 2px 0 0 var(--hear), -2px 0 0 0 var(--hear), 2px 0 0 0 var(--hear); }
+.wcard .row { display: flex; gap: 10px; justify-content: center; align-items: center; margin-top: 16px; }
+.wcard a { color: var(--gold); font-size: 13px; }
+.wcard .err { color: var(--warn); font-size: 13px; min-height: 18px; margin-top: 10px; }
+
+/* ---- redesign: two cards ---- */
+.dials { grid-template-columns: 1fr 1fr !important; gap: 18px !important; padding: 18px 20px 8px !important; align-items: stretch !important; }
+.card { background: var(--panel); padding: 14px 14px 16px; position: relative;
+        box-shadow: 0 -4px 0 0 var(--line), 0 4px 0 0 var(--line), -4px 0 0 0 var(--line), 4px 0 0 0 var(--line), 0 10px 0 0 var(--shadow); transition: box-shadow .2s steps(2); }
+.card.on { box-shadow: 0 -4px 0 0 var(--c), 0 4px 0 0 var(--c), -4px 0 0 0 var(--c), 4px 0 0 0 var(--c), 0 10px 0 0 var(--shadow); }
+.chead { display: flex; align-items: center; width: 100%; margin-bottom: 12px; }
+.chead .label { margin: 0; }
+.led { margin-left: auto; width: 8px; height: 8px; background: var(--faint); }
+.card.on .led { background: var(--c); box-shadow: 0 0 0 2px rgba(var(--rgb), .25); animation: blink 1.2s steps(2) infinite; }
+.card .dev { width: 100%; justify-content: flex-start; }
+.card .dev span { margin-left: auto; max-width: 120px; }
+.card .wheel { max-width: none; margin-top: 14px; height: 240px; box-shadow: 0 -4px 0 0 var(--line), 0 4px 0 0 var(--line), -4px 0 0 0 var(--line), 4px 0 0 0 var(--line); }
+.card.on .wheel { box-shadow: 0 -4px 0 0 rgba(var(--rgb), .7), 0 4px 0 0 rgba(var(--rgb), .7), -4px 0 0 0 rgba(var(--rgb), .7), 4px 0 0 0 rgba(var(--rgb), .7); }
+.vlabel { align-self: flex-start; font: 9px var(--tiny); color: var(--faint); letter-spacing: .1em; margin: 16px 0 0; }
+.voicebox { width: 100%; display: flex; flex-direction: column; align-items: center; }
+.voicebox .stage { margin-top: 8px; max-width: none; }
+.voicebox .vname { width: 100%; }
+.voice-off { width: 100%; display: none; flex-direction: column; align-items: center; justify-content: center; gap: 12px; margin-top: 16px; min-height: 196px;
+             border: 2px dashed var(--line); }
+.voice-off p { margin: 0; font-size: 13px; color: var(--faint); text-align: center; padding: 0 10px; }
+.ghosts { display: flex; gap: 10px; }
+.ghosts i { width: 30px; height: 30px; background: var(--line); opacity: .6;
+            -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 8' shape-rendering='crispEdges'%3E%3Cpath d='M2 0h2v1h2V0h2v1h1v1h1v4H9v1H8v1H7V7H6v1H4V7H3v1H2V7H1V6H0V2h1V1h1z'/%3E%3C/svg%3E") center / contain no-repeat; }
+.ghosts i:nth-child(2) { width: 38px; height: 38px; opacity: .9; }
+.card.idle .voicebox { display: none; } .card.idle .voice-off { display: flex; }
+.styles { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; width: 100%; margin-top: 8px; }
+.styles button { font: 10px var(--tiny); letter-spacing: .04em; padding: 7px 4px; color: var(--muted); background: var(--shadow);
+                 box-shadow: 0 -2px 0 0 var(--line), 0 2px 0 0 var(--line), -2px 0 0 0 var(--line), 2px 0 0 0 var(--line); }
+.styles button:hover { color: var(--ink); }
+.orig button.on { color: var(--bg) !important; background: var(--hear) !important; box-shadow: 0 -2px 0 0 var(--hear), 0 2px 0 0 var(--hear), -2px 0 0 0 var(--hear), 2px 0 0 0 var(--hear) !important; }
+.styles button:disabled { opacity: .4; cursor: not-allowed; }
+.styles button.on { color: var(--bg); background: var(--talk); box-shadow: 0 -2px 0 0 var(--talk), 0 2px 0 0 var(--talk), -2px 0 0 0 var(--talk), 2px 0 0 0 var(--talk); }
+.dialog { margin: 8px 20px 52px !important; }
+.dialog p { flex: 1; }
+.dialog .lag { position: static; margin-left: auto; background: none; padding: 0 0 0 12px; flex-direction: column; align-items: flex-end; border-left: 2px dashed var(--line); }
+.dialog .lag b { font-size: 16px; }
+#orb { opacity: .35 !important; }
+#style-modal textarea { width: 100%; min-height: 120px; resize: vertical; padding: 10px 12px; background: var(--shadow); border: 0; outline: none; color: var(--ink);
+                        font: 14px/1.45 var(--pixel); box-shadow: 0 -2px 0 0 var(--line), 0 2px 0 0 var(--line), -2px 0 0 0 var(--line), 2px 0 0 0 var(--line); user-select: text; text-align: left; }
+#style-modal textarea:focus { box-shadow: 0 -2px 0 0 var(--talk), 0 2px 0 0 var(--talk), -2px 0 0 0 var(--talk), 2px 0 0 0 var(--talk); }
 </style>
 </head>
 <body>
@@ -200,30 +256,39 @@ body.native .top { height: 50px; padding: 0 14px 0 84px; }   /* room for the win
 </header>
 
 <main class="dials">
-  <section class="dial hear" id="dial-in">
-    <div class="label">I hear</div>
+  <section class="dial card hear" id="dial-in">
+    <div class="chead"><span class="label">You hear</span><i class="led"></i></div>
     <div class="dev" title="Translations play here"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 14v-2a9 9 0 0 1 18 0v2"/><rect x="3" y="14" width="5" height="7" rx="2"/><rect x="16" y="14" width="5" height="7" rx="2"/></svg>
       <canvas id="wave-in" width="32" height="10"></canvas><span id="dev-in">Headphones</span></div>
     <div class="wheel" id="wheel-in" title="Turn to a language to start hearing everything on your Mac in it. Off stops it."><div class="drum"></div></div>
+    <div class="voice-off" id="voff-in"><div class="ghosts"><i></i><i></i><i></i></div><p>Turn the dial to pick a voice</p></div>
+    <div class="voicebox" id="vbox-in">
+    <div class="vlabel">Voice</div>
     <div class="stage"><button class="arrow" data-lane="in" data-d="-1">◀</button><div class="voices" id="voices-in" title="Drag or click to change the voice"></div><button class="arrow" data-lane="in" data-d="1">▶</button></div>
     <div class="vname" id="vname-in"><button class="star" data-lane="in" title="Favourite this voice">★</button><b></b><small></small></div>
     <div class="spk" id="spk-in"></div>
+    </div>
+    <div class="vlabel" style="margin-top:14px">Original audio</div>
+    <div class="styles orig" id="orig"><button data-level="full">Full</button><button data-level="0.25">25%</button><button data-level="0.1">10%</button><button data-level="0">Mute</button></div>
   </section>
 
-  <div class="seam"><div class="lag" id="lag" title="How far the voice runs behind the speaker. Click for details."><i></i><b id="lag-num">—</b><small>sec</small></div></div>
-
-  <section class="dial talk" id="dial-out">
-    <div class="label">They hear</div>
+  <section class="dial card talk" id="dial-out">
+    <div class="chead"><span class="label">They hear you</span><i class="led"></i></div>
     <div class="dev" title="Your voice comes from here"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>
       <canvas id="wave-out" width="32" height="10"></canvas><span id="dev-out">Microphone</span></div>
     <div class="wheel" id="wheel-out" title="Turn to a language and people on your calls hear you in it. Off stops it."><div class="drum"></div></div>
+    <div class="voice-off" id="voff-out"><div class="ghosts"><i></i><i></i><i></i></div><p>Turn the dial to pick a voice</p></div>
+    <div class="voicebox" id="vbox-out">
+    <div class="vlabel">Voice</div>
     <div class="stage"><button class="arrow" data-lane="out" data-d="-1">◀</button><div class="voices" id="voices-out" title="Drag or click to change your voice"></div><button class="arrow" data-lane="out" data-d="1">▶</button></div>
     <div class="vname" id="vname-out"><button class="star" data-lane="out" title="Favourite this voice">★</button><b></b><small></small></div>
-    <div class="spk"></div>
+    </div>
+    <div class="vlabel" style="margin-top:14px">Style</div>
+    <div class="styles" id="styles"><button data-style="natural">Natural</button><button data-style="formal">Formal</button><button data-style="friendly">Friendly</button><button data-style="brand">Brand…</button></div>
   </section>
 </main>
 
-<div class="dialog" id="dialog"><canvas id="mascot-big" width="10" height="10"></canvas><p id="say"></p></div>
+<div class="dialog" id="dialog"><canvas id="mascot-big" width="10" height="10"></canvas><p id="say"></p><div class="lag" id="lag" title="How far the voice runs behind the speaker. Click for details."><i></i><b id="lag-num">—</b><small>sec behind</small></div></div>
 
 <section class="drawer" id="drawer">
   <div class="grab" id="grab"><span>Transcript</span></div>
@@ -256,6 +321,8 @@ body.native .top { height: 50px; padding: 0 14px 0 84px; }   /* room for the win
     <label class="field">Send your voice to<select id="speak-out"></select></label>
     <label class="field"><span>Set up call apps automatically<small>Zoom, Meet and Slack pick up your translated voice</small></span><span class="sw"><input type="checkbox" id="auto-mic"><span></span></span></label>
   </div>
+  <div class="gt">AssemblyAI</div>
+  <div class="group"><div class="brow"><span class="url" id="key-state"></span><button class="btn" id="change-key">Change key</button></div></div>
   <div class="gt">Subtitles</div>
   <div class="group"><div class="brow"><span class="url">http://127.0.0.1:18765/captions?lane=all</span><button class="btn" id="open-subs">Open</button></div></div>
   <div class="gt">Advanced</div>
@@ -268,6 +335,20 @@ body.native .top { height: 50px; padding: 0 14px 0 84px; }   /* room for the win
   </div>
   <div class="brow" style="margin-top:18px"><span class="spacer"></span><button class="btn warn" id="quit">Quit Natter</button></div>
 </aside>
+<div class="welcome" id="welcome"><div class="wcard">
+  <canvas id="mascot-welcome" width="10" height="10"></canvas>
+  <h2>WELCOME TO NATTER</h2>
+  <p>Natter uses AssemblyAI to hear, translate and speak. Paste your API key to start. It stays in your Mac's Keychain.</p>
+  <input id="key-input" type="password" placeholder="Your AssemblyAI API key" spellcheck="false" autocomplete="off">
+  <div class="err" id="key-err"></div>
+  <div class="row"><a href="https://www.assemblyai.com/dashboard/signup" target="_blank">Get a key</a><span class="spacer"></span><button class="btn" id="key-save">Save key</button></div>
+</div></div>
+<div class="welcome" id="style-modal"><div class="wcard">
+  <h2>YOUR BRAND VOICE</h2>
+  <p>Tell Natter how you want to come across in their language: tone, words to use or avoid, product names. It never changes what you mean.</p>
+  <textarea id="brand-note" spellcheck="false" placeholder="Warm and reassuring, like a premium support team. Say “we”, not “I”. Call the product “Acme Cloud”. Never say “no big deal”: say we’re glad to help."></textarea>
+  <div class="row"><button class="btn" id="brand-cancel">Cancel</button><span class="spacer"></span><button class="btn" id="brand-save">Use this voice</button></div>
+</div></div>
 <div class="toast" id="toast"></div>
 
 <script>
@@ -468,7 +549,13 @@ function drawWaves(t) {
 
 /* ---------- ambient orb ---------- */
 const orb = { li: 0, lo: 0 };
+let lastFrame = 0, idleDrawn = false;
 function loop(t) {
+  if (document.hidden) { setTimeout(() => requestAnimationFrame(loop), 500); return; }   // window hidden: no drawing
+  const live = running.in || running.out || orb.li > 0.01 || orb.lo > 0.01;
+  if (!live && idleDrawn) { setTimeout(() => requestAnimationFrame(loop), 250); return; } // idle: nothing moves, check 4x/s
+  if (t - lastFrame < 33) { requestAnimationFrame(loop); return; }                       // ~30 fps is plenty for pixels
+  lastFrame = t; idleDrawn = !live;
   const c = $("#orb"), g = c.getContext("2d"), W = c.width, H = c.height, cx = W / 2, cy = H / 2, sec = t / 1000;
   orb.li += ((running.in ? (speaking.in ? 0.6 : lvl.in) : 0) - orb.li) * 0.08; orb.lo += ((running.out ? lvl.out : 0) - orb.lo) * 0.08;
   g.clearRect(0, 0, W, H); g.globalCompositeOperation = "lighter";
@@ -494,6 +581,7 @@ function deviceNames() {
 }
 function renderState() {
   updateSay();
+  for (const lane of ["in", "out"]) $("#dial-" + lane).classList.toggle("idle", !running[lane]);
   for (const lane of ["in", "out"]) $("#dial-" + lane).classList.toggle("on", running[lane]);
   $("#live-dot").classList.toggle("on", running.in || running.out);
   if (noBlackHole) $("#dev-out").textContent = "Install BlackHole to talk";
@@ -573,7 +661,7 @@ function updateSay() {
   say("Turn a dial to a language to start. Drag the critters to change voices.");
 }
 function drawMascots() {  // the app's own critter: green on the left, purple on the right
-  for (const id of ["mascot", "mascot-big"]) { const c = $("#" + id), g = c.getContext("2d");
+  for (const id of ["mascot", "mascot-big", "mascot-welcome"]) { const c = $("#" + id), g = c.getContext("2d");
     const P = ["..GG..PP..", ".GGGGPPPP.", "GGGGGPPPPP", "GGKGGPPKPP", "GGGGGPPPPP", "GGWWWWWWPP", ".GGGGPPPP.", "..G.GP.P..", "..........", ".........."];
     const col = { G: "#5ff2b5", P: "#c3a6ff", K: "#17112b", W: "#17112b" };
     P.forEach((row, y) => [...row].forEach((ch, x) => { if (col[ch]) { g.fillStyle = col[ch]; g.fillRect(x, y + 1, 1, 1); } })); }
@@ -589,7 +677,48 @@ async function toggleFavorite(lane) {
   strips[lane].build(); showStar(lane); const other = lane === "in" ? "out" : "in"; strips[other].build(); showStar(other);
 }
 
+function showWelcome(on) { $("#welcome").classList.toggle("show", on); if (on) setTimeout(() => $("#key-input").focus(), 50); }
+async function saveKey() {
+  const key = $("#key-input").value.trim(); $("#key-err").textContent = ""; $("#key-save").textContent = "Checking…";
+  const j = await api("/api/key", { key }); $("#key-save").textContent = "Save key";
+  if (!j.ok) { $("#key-err").textContent = j.error; return; }
+  S.has_key = true; $("#key-input").value = ""; showWelcome(false); $("#key-state").textContent = "Key saved in your Keychain"; toast("You're all set. Turn a dial to start.");
+}
+
+const STYLE_NOTES = {
+  natural: "",
+  formal: "Formal and polite: use the formal 'you' (usted, vous, Sie, Lei, o senhor/a senhora) and complete sentences.",
+  friendly: "Warm, casual and friendly, as if talking to a friend.",
+};
+function renderOrig() {
+  const lvl = cfg.in.mute_original && S.mute_device ? String(cfg.in.original_level ?? 0.1) : "full";
+  document.querySelectorAll("#orig button").forEach(b => { b.classList.toggle("on", b.dataset.level === lvl); b.disabled = b.dataset.level !== "full" && !S.mute_device;
+    b.title = !S.mute_device && b.dataset.level !== "full" ? "Needs BlackHole 16ch: brew install blackhole-16ch" : ""; });
+}
+async function setOrig(level) {
+  if (level === "full") await save("in", { mute_original: false });
+  else await save("in", { mute_original: true, original_level: parseFloat(level) });
+  renderOrig(); renderSettings();
+  toast(level === "full" ? "You'll hear the original at full volume" : level === "0" ? "Original muted while you listen" : `Original at ${Math.round(parseFloat(level) * 100)}% under the translation`);
+}
+function renderStyle() { const st = cfg.out.style || "natural"; document.querySelectorAll("#styles button").forEach(b => b.classList.toggle("on", b.dataset.style === st)); }
+async function setStyle(st, note) {
+  const patch = { style: st, style_note: st === "brand" ? note : STYLE_NOTES[st] };
+  if (st === "brand") patch.brand_note = note;
+  await save("out", patch, running.out); renderStyle();
+  toast(st === "brand" ? "They'll hear you in your brand voice" : `They'll hear you sounding ${st}`);
+}
+
 function wire() {
+  document.querySelectorAll("#orig button").forEach(b => b.onclick = () => setOrig(b.dataset.level));
+  document.querySelectorAll("#styles button").forEach(b => b.onclick = () => {
+    if (b.dataset.style === "brand") { $("#brand-note").value = cfg.out.brand_note || ""; $("#style-modal").classList.add("show"); setTimeout(() => $("#brand-note").focus(), 50); }
+    else setStyle(b.dataset.style);
+  });
+  $("#brand-cancel").onclick = () => $("#style-modal").classList.remove("show");
+  $("#brand-save").onclick = () => { const n = $("#brand-note").value.trim(); $("#style-modal").classList.remove("show"); if (n) setStyle("brand", n); else setStyle("natural"); };
+  $("#key-save").onclick = saveKey; $("#key-input").onkeydown = e => { if (e.key === "Enter") saveKey(); };
+  $("#change-key").onclick = () => { $("#panel").classList.remove("show"); $("#scrim").classList.remove("show"); showWelcome(true); };
   document.querySelectorAll(".star").forEach(b => b.onclick = () => toggleFavorite(b.dataset.lane));
   document.querySelectorAll(".arrow").forEach(b => b.onclick = () => { const st = strips[b.dataset.lane]; st.snap(st.idx + +b.dataset.d); });
   $("#lag").onclick = () => { $("#drawer").classList.add("open"); drawChart(); };
@@ -599,8 +728,8 @@ function wire() {
   grab.addEventListener("pointerup", () => { if (gy == null) return; gy = null; if (Math.abs(moved) < 6) dr.classList.toggle("open"); else dr.classList.toggle("open", moved < 0); if (dr.classList.contains("open")) drawChart(); });
   $("#clear").onclick = () => { $("#feed").innerHTML = ""; rows.clear(); };
   $("#diarize").onchange = async e => { await save("in", { diarize: e.target.checked }); if (!e.target.checked) { strips.in.target = "main"; strips.in.build(); } renderSpeakers(); };
-  $("#mute").onchange = e => { save("in", { mute_original: e.target.checked }); $("#level-field").style.display = e.target.checked ? "" : "none"; };
-  $("#orig-level").onchange = e => save("in", { original_level: parseFloat(e.target.value) });
+  $("#mute").onchange = e => { save("in", { mute_original: e.target.checked }); $("#level-field").style.display = e.target.checked ? "" : "none"; renderOrig(); };
+  $("#orig-level").onchange = e => { save("in", { original_level: parseFloat(e.target.value) }); renderOrig(); };
   $("#mic").onchange = e => { save("out", { input: e.target.value }); deviceNames(); };
   $("#hear-out").onchange = e => { save("in", { output: e.target.value }); deviceNames(); };
   $("#speak-out").onchange = e => save("out", { output: e.target.value });
@@ -642,6 +771,7 @@ function connect() { const ws = new WebSocket(`ws://${location.host}/ws`); ws.on
   if (cfg.in.preset && cfg.in.preset !== "Translate" && cfg.in.preset !== "Custom") both({ preset: "Translate", prompt: S.options.presets.Translate });
   buildWheels(); strips.in = new VoiceStrip("in"); strips.out = new VoiceStrip("out"); strips.in.build(); strips.out.build();
   renderSpeakers(); deviceNames(); renderState(); renderSettings(); wire(); connect(); drawMascots(); showStar("in"); showStar("out");
+  $("#key-state").textContent = S.has_key ? "Key saved in your Keychain" : "No key yet"; showWelcome(!S.has_key); renderStyle(); renderOrig();
   requestAnimationFrame(loop);
 })();
 </script>

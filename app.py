@@ -30,7 +30,11 @@ from aiohttp import web
 from scipy.signal import resample_poly
 
 HERE = Path(__file__).resolve().parent
-CONFIG_PATH = HERE / "config.json"
+# Writable data (settings, API key, logs). Next to app.py when run from source; the packaged app points this at
+# ~/Library/Application Support/Natter, because a signed .app bundle must not be written to.
+DATA = Path(os.environ.get("NATTER_DATA") or HERE)
+DATA.mkdir(parents=True, exist_ok=True)
+CONFIG_PATH = DATA / "config.json"
 SYSCAP = HERE / "bin" / "syscap"
 AUDIODEV = HERE / "bin" / "audiodev"
 VIRTUAL_MICS = ("blackhole", "zoomaudiodevice", "microsoft teams audio", "aggregate")
@@ -121,15 +125,51 @@ def ws_connect(url, headers, **kw):
         return websockets.connect(url, extra_headers=headers, **kw)
 
 
+KEYCHAIN = ("dev.natter.app", "assemblyai")  # service, account: the key lives in the login Keychain, like Blurt's
+
+
+def _keychain_get():
+    try:
+        r = subprocess.run(["/usr/bin/security", "find-generic-password", "-s", KEYCHAIN[0], "-a", KEYCHAIN[1], "-w"],
+                           capture_output=True, text=True, timeout=5)
+        return r.stdout.strip() if r.returncode == 0 else ""
+    except Exception:  # noqa: BLE001
+        return ""
+
+
 def api_key():
+    """The AssemblyAI key: environment, then the macOS Keychain, then a .env file (running from source). '' if none
+    yet: the window then asks for one."""
     if os.environ.get("ASSEMBLYAI_API_KEY"):
         return os.environ["ASSEMBLYAI_API_KEY"].strip()
-    env = HERE / ".env"
-    if env.exists():
-        for line in env.read_text().splitlines():
-            if line.startswith("ASSEMBLYAI_API_KEY="):
-                return line.split("=", 1)[1].strip().strip('"')
-    raise SystemExit("ASSEMBLYAI_API_KEY missing: put it in .env next to app.py")
+    global _key_cache
+    if _key_cache:
+        return _key_cache
+    key = _keychain_get()
+    if not key:
+        for env in (DATA / ".env", HERE / ".env"):
+            if env.exists():
+                for line in env.read_text().splitlines():
+                    if line.startswith("ASSEMBLYAI_API_KEY="):
+                        key = line.split("=", 1)[1].strip().strip('"')
+                        break
+            if key:
+                break
+    _key_cache = key
+    return key
+
+
+_key_cache = ""
+
+
+def save_api_key(key):
+    """Store the key in the login Keychain (-U updates an existing item). Never written to disk in plain text."""
+    global _key_cache
+    r = subprocess.run(["/usr/bin/security", "add-generic-password", "-U", "-s", KEYCHAIN[0], "-a", KEYCHAIN[1],
+                        "-l", "Natter: AssemblyAI API key", "-w", key.strip()], capture_output=True, text=True, timeout=5)
+    if r.returncode != 0:
+        raise RuntimeError("couldn't save the key to your Keychain")
+    _key_cache = key.strip()
 
 
 def load_config():
@@ -156,6 +196,12 @@ def render_prompt(lane_cfg):
     p = p.replace("{source}", src).replace("{target}", lane_cfg["target"])
     if "{{turn}}" not in p:
         p += "\n\n{{turn}}"
+    style = (lane_cfg.get("style_note") or "").strip()
+    if style:  # how you want to come across: a register, a vibe, or a brand's voice. It wins over the speaker's register.
+        rule = ("How to say it (this overrides the speaker's own tone and register where they differ, but never "
+                f"change the meaning or invent facts): {style}")
+        p = p.replace("\n\nThe conversation so far", f"\n\n{rule}\n\nThe conversation so far", 1) if "\n\nThe conversation so far" in p \
+            else p.replace("{{turn}}", f"{rule}\n\n{{{{turn}}}}", 1)
     return p
 
 
@@ -1254,7 +1300,7 @@ class Lane:
             save_config(self.hub.cfg)
 
     HOT_KEYS = {"target", "source", "voice", "prompt", "preset", "llm_model", "stt_model", "mode", "diarize",
-                "max_speakers", "speaker_voices", "auto_segment"}
+                "max_speakers", "speaker_voices", "auto_segment", "style", "style_note", "voices_by_lang"}
 
     async def retarget(self, cfg):
         """Switch language, voice or model while running: reconnect only the STT and TTS sessions. The audio
@@ -1342,6 +1388,7 @@ async def state(_req):
         sd._initialize()
     return web.json_response({
         "config": hub.cfg, "devices": list_devices(), "system_input": SYSTEM_INPUT, "mute_device": mute_device(),
+        "has_key": bool(api_key()),
         "system_capture": SYSCAP.exists(), "running": {k: l.running for k, l in hub.lanes.items()},
         "options": {"tts_languages": TTS_LANGUAGES, "source_languages": SOURCE_LANGUAGES, "voices": VOICES,
                     "stt_models": STT_MODELS, "llm_models": LLM_MODELS, "presets": PRESETS}})
@@ -1352,6 +1399,27 @@ async def lanes_state(_req):
     """Small status for the menu bar."""
     return web.json_response({k: {"running": l.running, "target": hub.cfg["lanes"][k]["target"],
                                   "source": hub.cfg["lanes"][k]["source"]} for k, l in hub.lanes.items()})
+
+
+@routes.post("/api/key")
+async def set_key(req):
+    """First run: check the key against the API, then save it (chmod 600) in the data folder."""
+    import aiohttp
+    key = ((await req.json()).get("key") or "").strip()
+    if not key:
+        return web.json_response({"ok": False, "error": "Paste your AssemblyAI API key."}, status=400)
+    try:
+        async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=10)) as s:
+            async with s.get("https://api.assemblyai.com/v2/transcript?limit=1", headers={"Authorization": key}) as r:
+                if r.status in (401, 403):
+                    return web.json_response({"ok": False, "error": "That key wasn't accepted. Check it and try again."}, status=400)
+    except Exception:  # noqa: BLE001  offline: save it anyway, the first session will tell
+        pass
+    try:
+        save_api_key(key)
+    except Exception as e:  # noqa: BLE001
+        return web.json_response({"ok": False, "error": str(e)}, status=500)
+    return web.json_response({"ok": True})
 
 
 @routes.post("/api/restore-sound")
@@ -1403,6 +1471,8 @@ async def set_config(req):
 @routes.post("/api/start/{lane}")
 async def start(req):
     lane = hub.lanes[req.match_info["lane"]]
+    if not api_key():
+        return web.json_response({"ok": False, "error": "Add your AssemblyAI API key first (Settings)."}, status=400)
     try:
         await lane.start(hub.cfg["lanes"][lane.key])
     except Exception as e:  # noqa: BLE001
@@ -1488,7 +1558,8 @@ def open_window(url):
 
 
 def main():
-    api_key()  # fail fast
+    if not api_key():
+        print("no AssemblyAI API key yet: the window will ask for one", flush=True)
     fixed = restore_sound()  # the app quit without restoring output/mic last time
     if fixed:
         print("restored at launch:", ", ".join(fixed), flush=True)

@@ -23,6 +23,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, NSWind
     var item: NSStatusItem!
     var proc: Process?
     var dir = ""
+    var dataDir = ""
     var hearItem: NSMenuItem!
     var speakItem: NSMenuItem!
     var overlayItem: NSMenuItem!
@@ -31,8 +32,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, NSWind
 
     func applicationDidFinishLaunching(_ note: Notification) {
         let info = Bundle.main.infoDictionary ?? [:]
-        dir = info["LIProjectDir"] as? String ?? ""
-        let python = info["LIPython"] as? String ?? "/usr/bin/python3"
+        // Two ways to run: from a source checkout (LIProjectDir/LIPython point at it), or packaged (LIBundled: the
+        // engine and a private Python live inside the app; settings, key and logs go to Application Support).
+        let bundled = info["LIBundled"] as? Bool ?? false
+        let res = Bundle.main.resourcePath ?? ""
+        dir = bundled ? res + "/app" : (info["LIProjectDir"] as? String ?? "")
+        let python = bundled ? res + "/python/bin/python3" : (info["LIPython"] as? String ?? "/usr/bin/python3")
+        dataDir = bundled ? NSHomeDirectory() + "/Library/Application Support/Natter" : dir
 
         item = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
         setIcon(active: false)
@@ -53,8 +59,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, NSWind
         menu.items.forEach { $0.target = self }
         item.menu = menu
 
-        let logs = dir + "/logs"
-        try? FileManager.default.createDirectory(atPath: logs, withIntermediateDirectories: true)
+        let logs = dataDir + "/logs"
+        try? FileManager.default.createDirectory(atPath: logs, withIntermediateDirectories: true)  // also creates dataDir
         FileManager.default.createFile(atPath: logs + "/app.log", contents: nil)
         let log = FileHandle(forWritingAtPath: logs + "/app.log")
 
@@ -62,6 +68,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, NSWind
         p.executableURL = URL(fileURLWithPath: python)
         p.arguments = ["-u", dir + "/app.py", "--no-window"]
         p.currentDirectoryURL = URL(fileURLWithPath: dir)
+        var env = ProcessInfo.processInfo.environment
+        env["NATTER_DATA"] = dataDir
+        env["PYTHONDONTWRITEBYTECODE"] = "1"  // never write into the signed bundle
+        p.environment = env
         p.standardOutput = log
         p.standardError = log
         p.terminationHandler = { _ in DispatchQueue.main.async { NSApp.terminate(nil) } }
@@ -110,13 +120,19 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, NSWind
         NSApp.mainMenu = main
     }
 
+    /// The pixel critter: a template silhouette when idle (matches light and dark menu bars), full colour while
+    /// translating. Falls back to SF Symbols if the images are missing.
     func setIcon(active: Bool) {
-        let name = active ? "waveform.circle.fill" : "globe"
-        if let img = NSImage(systemSymbolName: name, accessibilityDescription: "Natter") {
+        let file = active ? "menubar-live" : "menubar"
+        if let img = Bundle.main.image(forResource: file) {
+            img.size = NSSize(width: 18, height: 18)
+            img.isTemplate = !active
+            item.button?.image = img
+        } else if let img = NSImage(systemSymbolName: active ? "waveform.circle.fill" : "globe", accessibilityDescription: "Natter") {
             img.isTemplate = true
             item.button?.image = img
         } else {
-            item.button?.title = active ? "LI•" : "LI"
+            item.button?.title = active ? "N•" : "N"
         }
     }
 
@@ -244,7 +260,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, NSWind
     /// Escape hatch: stop translating and put the Mac's output and mic back on real devices.
     @objc func restoreSound() { post("/api/restore-sound") }
 
-    @objc func showLog() { NSWorkspace.shared.open(URL(fileURLWithPath: dir + "/logs/app.log")) }
+    @objc func showLog() { NSWorkspace.shared.open(URL(fileURLWithPath: dataDir + "/logs/app.log")) }
 
     @objc func quit() {
         proc?.terminationHandler = nil

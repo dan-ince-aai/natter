@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Natter: real-time voice translation for your Mac</title>
+<meta name="description" content="Natter translates calls, livestreams, videos and meetings as they happen, and lets the people on your call hear you in their language. Free and open source for macOS.">
+<meta property="og:title" content="Natter: hear anyone, speak their language">
+<meta property="og:description" content="Free, open-source, real-time voice translation for anything on your Mac. Pixel critters included.">
+<meta property="og:image" content="https://dan-ince-aai.github.io/natter/assets/social.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="assets/favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;500;600;700&family=Silkscreen&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #17112b; --panel: #221939; --panel2: #2c2149; --ink: #f6ecd9; --muted: #a99cc4; --faint: #6b5e90; --line: #3d3063; --shadow: #0d0919;
+  --hear: #5ff2b5; --talk: #c3a6ff; --gold: #ffd166;
+  --pixel: "Pixelify Sans", ui-monospace, monospace; --tiny: "Silkscreen", ui-monospace, monospace;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 18px/1.5 var(--pixel); -webkit-font-smoothing: none;
+       background-image: radial-gradient(rgba(255,255,255,.035) 1px, transparent 1px); background-size: 8px 8px; }
+a { color: var(--gold); }
+img, video, canvas { image-rendering: pixelated; }
+.wrap { max-width: 1040px; margin: 0 auto; padding: 0 20px; }
+.px { background: var(--panel); box-shadow: 0 -4px 0 0 var(--line), 0 4px 0 0 var(--line), -4px 0 0 0 var(--line), 4px 0 0 0 var(--line), 0 10px 0 0 var(--shadow); }
+nav { display: flex; align-items: center; gap: 12px; padding: 22px 0; }
+nav .brand { display: flex; align-items: center; gap: 10px; font: 15px var(--tiny); letter-spacing: .06em; color: var(--ink); text-decoration: none; }
+nav .brand img { width: 30px; }
+nav .sp { flex: 1; }
+nav a.l { font: 12px var(--tiny); color: var(--muted); text-decoration: none; letter-spacing: .04em; }
+nav a.l:hover { color: var(--gold); }
+.btn { display: inline-flex; align-items: center; gap: 10px; font: 14px var(--tiny); letter-spacing: .04em; text-decoration: none; padding: 14px 20px; color: var(--bg); background: var(--hear);
+       box-shadow: 0 -4px 0 0 var(--hear), 0 4px 0 0 var(--hear), -4px 0 0 0 var(--hear), 4px 0 0 0 var(--hear), 0 10px 0 0 var(--shadow); transition: transform .08s steps(2); }
+.btn:hover { transform: translateY(-2px); } .btn:active { transform: translateY(2px); }
+.btn.ghost { color: var(--ink); background: var(--panel); box-shadow: 0 -4px 0 0 var(--line), 0 4px 0 0 var(--line), -4px 0 0 0 var(--line), 4px 0 0 0 var(--line), 0 10px 0 0 var(--shadow); }
+.hero { display: grid; grid-template-columns: 1.1fr .9fr; gap: 40px; align-items: center; padding: 40px 0 60px; }
+.hero h1 { font: 76px/1 var(--tiny); margin: 0 0 18px; letter-spacing: .02em; text-shadow: 6px 6px 0 var(--shadow); }
+.hero h2 { font-size: 30px; font-weight: 600; margin: 0 0 14px; color: var(--gold); line-height: 1.2; }
+.hero p { color: var(--muted); margin: 0 0 28px; max-width: 520px; }
+.hero .ctas { display: flex; gap: 18px; flex-wrap: wrap; }
+.hero small { display: block; margin-top: 22px; font: 11px var(--tiny); color: var(--faint); letter-spacing: .04em; }
+.hero .shot { justify-self: center; width: min(360px, 100%); padding: 10px; }
+.hero .shot img { width: 100%; display: block; }
+.video { padding: 12px; margin: 0 0 80px; }
+.video video { width: 100%; display: block; background: var(--shadow); }
+section h3 { font: 22px var(--tiny); letter-spacing: .04em; margin: 0 0 8px; }
+section .lead { color: var(--muted); margin: 0 0 30px; max-width: 680px; }
+.grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; margin-bottom: 90px; }
+.tile { padding: 22px 20px; }
+.tile .ico { font: 11px var(--tiny); color: var(--bg); background: var(--hear); display: inline-block; padding: 4px 8px; margin-bottom: 12px; letter-spacing: .04em; }
+.tile.t .ico { background: var(--talk); } .tile.g .ico { background: var(--gold); }
+.tile h4 { margin: 0 0 6px; font-size: 21px; font-weight: 600; }
+.tile p { margin: 0; color: var(--muted); font-size: 16px; }
+.voice { display: grid; grid-template-columns: .9fr 1.1fr; gap: 36px; align-items: start; margin-bottom: 90px; }
+.say { padding: 18px 20px; margin-bottom: 18px; }
+.say .who { font: 10px var(--tiny); color: var(--faint); letter-spacing: .08em; margin-bottom: 6px; }
+.say .txt { font-size: 18px; }
+.say.in { box-shadow: 0 -4px 0 0 var(--line), 0 4px 0 0 var(--line), -4px 0 0 0 var(--line), 4px 0 0 0 var(--line); }
+.say.b { box-shadow: 0 -4px 0 0 var(--talk), 0 4px 0 0 var(--talk), -4px 0 0 0 var(--talk), 4px 0 0 0 var(--talk); }
+.steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; margin-bottom: 90px; counter-reset: s; }
+.step { padding: 22px 20px; }
+.step::before { counter-increment: s; content: counter(s); font: 30px var(--tiny); color: var(--gold); display: block; margin-bottom: 8px; }
+.step h4 { margin: 0 0 6px; font-size: 20px; font-weight: 600; }
+.step p { margin: 0; color: var(--muted); font-size: 16px; }
+code { font: 14px ui-monospace, "SF Mono", Menlo, monospace; background: var(--shadow); padding: 2px 6px; color: var(--ink); }
+.how { padding: 26px 24px; margin-bottom: 90px; display: flex; align-items: center; gap: 16px; flex-wrap: wrap; justify-content: center; text-align: center; }
+.how .n { padding: 14px 16px; background: var(--shadow); flex: 1; min-width: 160px; max-width: 260px; }
+.how .n b { display: block; font: 11px var(--tiny); color: var(--hear); letter-spacing: .06em; margin-bottom: 4px; }
+.how .n span { font-size: 15px; color: var(--muted); }
+.how .arr { font: 14px var(--tiny); color: var(--gold); }
+.final { text-align: center; padding: 50px 24px; margin-bottom: 60px; }
+.final h3 { font-size: 28px; margin-bottom: 12px; }
+.final p { color: var(--muted); margin: 0 auto 28px; max-width: 560px; }
+footer { padding: 30px 0 50px; color: var(--faint); font: 11px var(--tiny); letter-spacing: .04em; display: flex; gap: 18px; flex-wrap: wrap; align-items: center; }
+footer a { color: var(--muted); text-decoration: none; } footer a:hover { color: var(--gold); }
+@media (max-width: 820px) {
+  .hero, .voice { grid-template-columns: 1fr; } .grid, .steps { grid-template-columns: 1fr; }
+  .hero h1 { font-size: 52px; } .hero h2 { font-size: 24px; } nav a.l { display: none; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <nav>
+    <a class="brand" href="#"><img src="assets/mascot.png" alt="">NATTER</a>
+    <span class="sp"></span>
+    <a class="l" href="#uses">Uses</a><a class="l" href="#voice">Brand voice</a><a class="l" href="#install">Install</a>
+    <a class="btn ghost" style="padding:10px 14px;font-size:11px" href="https://github.com/dan-ince-aai/natter">GitHub</a>
+  </nav>
+
+  <header class="hero">
+    <div>
+      <h1>NATTER</h1>
+      <h2>Hear anyone.<br>Speak their language.</h2>
+      <p>Turn a dial and anything your Mac plays (a call, a stream, a video, a meeting) is spoken into your ears in your
+        language. Turn the other and the people on your call hear you in theirs. Live, in any app.</p>
+      <div class="ctas">
+        <a class="btn" href="https://github.com/dan-ince-aai/natter/releases/latest/download/Natter.dmg">▼ Download for Mac</a>
+        <a class="btn ghost" href="https://github.com/dan-ince-aai/natter">★ Star on GitHub</a>
+      </div>
+      <small>FREE · OPEN SOURCE (MIT) · macOS 14.4+ · APPLE SILICON · BRING YOUR OWN ASSEMBLYAI KEY</small>
+    </div>
+    <div class="shot px"><img src="assets/screenshot.png" alt="The Natter window: two language dials and voice critters"></div>
+  </header>
+
+  <div class="video px"><video src="assets/natter-ad.mp4" poster="assets/poster.jpg" controls playsinline preload="metadata"></video></div>
+
+  <section id="uses">
+    <h3>WORKS WHEREVER YOUR MAC HAS SOUND</h3>
+    <p class="lead">Natter sits between your Mac and your ears, and between your mic and your call. Nothing to install on the other side.</p>
+    <div class="grid">
+      <div class="tile px"><span class="ico">CALLS</span><h4>Video calls</h4><p>Zoom, Meet, Teams, Slack huddles. Natter shows up as your microphone, so the other side just hears you in their language.</p></div>
+      <div class="tile px t"><span class="ico">PHONE</span><h4>VoIP and phone</h4><p>Softphones, WhatsApp desktop, browser dialers. Anything that plays through your Mac.</p></div>
+      <div class="tile px"><span class="ico">LIVE</span><h4>Streams and videos</h4><p>Dub a livestream or a video as it plays, with the original turned down to 10% underneath.</p></div>
+      <div class="tile px t"><span class="ico">TEAMS</span><h4>Meetings</h4><p>Every speaker gets their own critter voice, so you always know who's talking.</p></div>
+      <div class="tile px g"><span class="ico">GLOBAL</span><h4>A global call centre</h4><p>Give every agent Natter and a brand voice, and take calls in languages nobody on the team speaks.</p></div>
+      <div class="tile px"><span class="ico">HACK IT</span><h4>Extendable</h4><p>One Python file, a local API and an editable prompt. Make it summarise, simplify, or speak like a pirate.</p></div>
+    </div>
+  </section>
+
+  <section id="voice" class="voice">
+    <div>
+      <h3>SOUND LIKE YOU MEAN IT</h3>
+      <p class="lead">Natter doesn't just translate words. Pick how you come across in their language: natural, formal,
+        friendly, or your own brand voice, with the words to use and avoid and your product names kept exact. It never
+        changes what you mean.</p>
+      <p class="lead">Perfect for support teams and anyone selling across borders: every call sounds on-brand and
+        properly local, not machine-translated.</p>
+    </div>
+    <div>
+      <div class="say in px"><div class="who">YOU SAY</div><div class="txt">“Yeah no worries mate, I can sort that refund out for you today, it's no big deal.”</div></div>
+      <div class="say px"><div class="who">THEY HEAR · NATURAL</div><div class="txt">“Sí, no te preocupes, amigo, puedo gestionar ese reembolso hoy mismo, no es nada.”</div></div>
+      <div class="say b px"><div class="who">THEY HEAR · YOUR BRAND VOICE</div><div class="txt">“No se preocupe, podemos gestionar ese reembolso por usted hoy mismo. Nos alegra poder ayudarle.”</div></div>
+    </div>
+  </section>
+
+  <section>
+    <h3>HOW IT WORKS</h3>
+    <p class="lead">Built on AssemblyAI's speech AI. Usage is billed to your own key, and your key stays in your Mac's Keychain.</p>
+    <div class="how px">
+      <div class="n"><b>HEAR</b><span>Universal-3.6 Pro streaming speech-to-text</span></div><span class="arr">▶</span>
+      <div class="n"><b>TRANSLATE</b><span>LLM Gateway, with the conversation as context</span></div><span class="arr">▶</span>
+      <div class="n"><b>SPEAK</b><span>AssemblyAI TTS, a voice per speaker</span></div>
+    </div>
+  </section>
+
+  <section id="install">
+    <h3>INSTALL IN A MINUTE</h3>
+    <p class="lead">You'll need an <a href="https://www.assemblyai.com/dashboard/signup">AssemblyAI API key</a>.</p>
+    <div class="steps">
+      <div class="step px"><h4>Download</h4><p>Open <code>Natter.dmg</code> and drag Natter to Applications. The first time, macOS may say it can't check the app: open System Settings → Privacy &amp; Security → Open Anyway.</p></div>
+      <div class="step px"><h4>Paste your key</h4><p>Natter asks for your AssemblyAI key on first launch and keeps it in your Keychain. Allow microphone and system audio when asked.</p></div>
+      <div class="step px"><h4>Turn a dial</h4><p>That's it. To talk on calls, add the free BlackHole driver once: <code>brew install blackhole-2ch blackhole-16ch</code>.</p></div>
+    </div>
+  </section>
+
+  <div class="final px">
+    <h3>FREE. OPEN SOURCE. EXTENDABLE.</h3>
+    <p>Natter is MIT-licensed. Read the code, change the prompt, add voices, or build something new on its local API.</p>
+    <div style="display:flex;gap:18px;justify-content:center;flex-wrap:wrap">
+      <a class="btn" href="https://github.com/dan-ince-aai/natter/releases/latest/download/Natter.dmg">▼ Download for Mac</a>
+      <a class="btn ghost" href="https://github.com/dan-ince-aai/natter">View the code</a>
+    </div>
+  </div>
+
+  <footer>
+    <img src="assets/mascot.png" width="28" alt=""><span>NATTER · MIT</span>
+    <a href="https://github.com/dan-ince-aai/natter">GITHUB</a>
+    <a href="https://www.assemblyai.com">BUILT ON ASSEMBLYAI</a>
+  </footer>
+</div>
+</body>
+</html>

@@ -130,6 +130,20 @@ footer a { color: var(--muted); text-decoration: none; } footer a:hover { color:
 .now i { width: 8px; height: 8px; background: var(--hear); animation: blink 1s steps(2) infinite; }
 @keyframes blink { 50% { opacity: .3; } }
 .quick { margin: 18px 0 0 !important; font-size: 15px; color: var(--ink) !important; }
+
+.meet { padding: 18px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 90px; }
+.seat { background: var(--shadow); padding: 16px 10px 12px; display: flex; flex-direction: column; align-items: center; gap: 10px; min-height: 230px; position: relative;
+        box-shadow: 0 -3px 0 0 var(--line), 0 3px 0 0 var(--line), -3px 0 0 0 var(--line), 3px 0 0 0 var(--line); transition: box-shadow .12s steps(2); }
+.seat.on { box-shadow: 0 -3px 0 0 var(--hear), 0 3px 0 0 var(--hear), -3px 0 0 0 var(--hear), 3px 0 0 0 var(--hear); }
+.seat canvas { width: 72px; height: 72px; }
+.seat.on canvas { animation: talk .24s steps(2) infinite; }
+.seat .tag { font: 9px var(--tiny); color: var(--faint); letter-spacing: .06em; text-align: center; line-height: 1.6; }
+.seat .tag b { display: block; color: var(--ink); font: 11px var(--tiny); }
+.seat.on .tag { color: var(--hear); }
+.seat .said { font-size: 14px; color: var(--muted); text-align: center; min-height: 40px; opacity: 0; transition: opacity .12s steps(2); }
+.seat .said em { display: block; font-style: normal; color: var(--ink); font-size: 16px; margin-top: 2px; }
+.seat.on .said { opacity: 1; }
+@media (max-width: 820px) { .meet { grid-template-columns: repeat(2, 1fr); } }
 </style>
 </head>
 <body>
@@ -137,7 +151,7 @@ footer a { color: var(--muted); text-decoration: none; } footer a:hover { color:
   <nav>
     <a class="brand" href="#"><img src="assets/mascot.png" alt="">NATTER</a>
     <span class="sp"></span>
-    <a class="l" href="#install">Install</a><a class="l" href="#languages">Languages</a><a class="l" href="#built">How it's built</a>
+    <a class="l" href="#install">Install</a><a class="l" href="#speakers">Voices</a><a class="l" href="#languages">Languages</a><a class="l" href="#built">How it's built</a>
 <a class="l" href="https://github.com/dan-ince-aai/natter">GitHub</a>
     <a class="btn" style="padding:10px 14px;font-size:11px" href="https://github.com/dan-ince-aai/natter/releases/latest/download/Natter.dmg">▼ Download free</a>
   </nav>
@@ -175,6 +189,13 @@ footer a { color: var(--muted); text-decoration: none; } footer a:hover { color:
     </div>
   </section>
 
+
+  <section id="speakers">
+    <h3>EVERY SPEAKER GETS THEIR OWN VOICE</h3>
+    <p class="lead">In a meeting or a group call, Natter tells people apart and gives each one their own critter voice,
+      so you always know who's talking, even when you don't speak their language. Pick any voice for anyone.</p>
+    <div class="meet px" id="meet"></div>
+  </section>
 
   <section id="languages">
     <h3>SIX LANGUAGES, ANY DIRECTION</h3>
@@ -324,6 +345,24 @@ async function scene(k) {
 }
 (async () => { for (let k = 0; ; k = (k + 1) % PAIRS.length) await scene(k); })();
 document.querySelectorAll("canvas[data-flag]").forEach(c => flag(c, c.dataset.flag));
+// "Every speaker gets their own voice": a meeting where each speaker is heard in their own critter voice.
+const SEATS = [
+  ["MARCOS", "aai-titus", "TITUS", "Empezamos con los precios.", "Let's start with pricing."],
+  ["ELENA", "aai-kyla", "KYLA", "Y luego la fecha de entrega.", "And then the delivery date."],
+  ["JAVI", "aai-peter", "PETER", "Yo tengo los números.", "I've got the numbers."],
+  ["LUCÍA", "aai-nancy", "NANCY", "Perfecto, adelante.", "Perfect, go ahead."],
+];
+const meet = document.getElementById("meet");
+if (meet) {
+  SEATS.forEach(([name, voice, vname, es, en]) => {
+    const d = document.createElement("div"); d.className = "seat";
+    d.innerHTML = `<canvas></canvas><div class="tag"><b>${name}</b>VOICE · ${vname}</div><div class="said">“${es}”<em>“${en}”</em></div>`;
+    meet.appendChild(d); critter(d.querySelector("canvas"), voice);
+  });
+  const seats = [...meet.children];
+  (async () => { for (let i = 0; ; i = (i + 1) % seats.length) { seats.forEach(x => x.classList.remove("on")); seats[i].classList.add("on"); await new Promise(r => setTimeout(r, 2200)); } })();
+}
+
 
 </script>
 </body>

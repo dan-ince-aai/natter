@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Live captions</title>
+<style>
+  /* Transparent by default for an OBS Browser Source. ?bg=1 gives a dark background for a normal window. */
+  html, body { margin: 0; height: 100%; background: transparent; overflow: hidden; }
+  body.bg { background: #101010; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", sans-serif;
+         display: flex; flex-direction: column; justify-content: flex-end; align-items: center; padding: 0 6vw 7vh; box-sizing: border-box; }
+  .box { max-width: 1400px; text-align: center; }
+  .line { display: inline; background: rgba(0,0,0,.72); color: #fff; font-size: clamp(22px, 3.4vw, 56px); font-weight: 600;
+          line-height: 1.45; padding: .08em .35em; border-radius: .18em; box-decoration-break: clone; -webkit-box-decoration-break: clone; }
+  .src { margin-top: .6em; }
+  .src span { display: inline; background: rgba(0,0,0,.55); color: rgba(255,255,255,.78); font-size: clamp(14px, 1.6vw, 26px);
+              padding: .1em .4em; border-radius: .2em; line-height: 1.5; }
+  .live { color: rgba(255,255,255,.6); font-style: italic; }
+  .fade { animation: fade .25s ease-out; }
+  @keyframes fade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+</style>
+</head>
+<body>
+<div class="box">
+  <div><span class="line" id="dst"></span></div>
+  <div class="src" id="srcwrap" hidden><span id="src"></span></div>
+</div>
+<script>
+const q = new URLSearchParams(location.search);
+const lane = q.get("lane") || "in";
+const showSource = q.get("source") !== "0";
+if (q.get("bg") === "1") document.body.classList.add("bg");
+const dst = document.getElementById("dst"), src = document.getElementById("src"), srcwrap = document.getElementById("srcwrap");
+dst.style.visibility = "hidden";
+let clearTimer;
+function show(text, original) {
+  dst.textContent = text; dst.style.visibility = text ? "visible" : "hidden";
+  dst.classList.remove("fade"); void dst.offsetWidth; dst.classList.add("fade");
+  if (showSource && original) { src.textContent = original; src.className = ""; srcwrap.hidden = false; }
+  clearTimeout(clearTimer); clearTimer = setTimeout(() => { dst.style.visibility = "hidden"; srcwrap.hidden = true; }, 9000);
+}
+const finals = {};
+function connect() {
+  const ws = new WebSocket(`ws://${location.host}/ws`);
+  ws.onmessage = e => {
+    const m = JSON.parse(e.data); if (lane !== "all" && m.lane !== lane) return;
+    if (m.type === "final") finals[m.lane + ":" + m.turn] = m.text;
+    if (m.type === "partial" && showSource) { src.textContent = m.text; src.className = "live"; srcwrap.hidden = false; clearTimeout(clearTimer); }
+    if (m.type === "translation" && m.text) show(m.text, finals[m.lane + ":" + m.turn]);
+  };
+  ws.onclose = () => setTimeout(connect, 1000);
+}
+connect();
+</script>
+</body>
+</html>

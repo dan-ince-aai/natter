@@ -1,0 +1,649 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Natter</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;500;600;700&family=Silkscreen&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #17112b; --panel: #221939; --panel2: #2c2149; --ink: #f6ecd9; --muted: #a99cc4; --faint: #5d5080; --line: #3d3063; --shadow: #0d0919;
+  --hear: #5ff2b5; --hear-rgb: 95,242,181; --talk: #c3a6ff; --talk-rgb: 195,166,255; --gold: #ffd166; --warn: #ff7b54;
+  --item: 80px; --vstep: 72px; --px: 4px;
+  --pixel: "Pixelify Sans", ui-monospace, monospace; --tiny: "Silkscreen", ui-monospace, monospace;
+}
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { margin: 0; height: 100%; overflow: hidden; }
+body { background: var(--bg); color: var(--ink); font: 15px/1.35 var(--pixel); -webkit-font-smoothing: none; user-select: none; display: flex; flex-direction: column;
+       background-image: radial-gradient(rgba(255,255,255,.035) 1px, transparent 1px); background-size: 8px 8px; }
+button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; padding: 0; }
+select, textarea, input { font: inherit; color: inherit; }
+canvas { image-rendering: pixelated; }
+/* pixel frame: notched corners from stepped shadows */
+.px { position: relative; background: var(--panel); box-shadow: 0 calc(var(--px) * -1) 0 0 var(--line), 0 var(--px) 0 0 var(--line), calc(var(--px) * -1) 0 0 0 var(--line), var(--px) 0 0 0 var(--line), 0 calc(var(--px) * 2) 0 0 var(--shadow); }
+#orb { position: fixed; left: 50%; top: 40%; width: 760px; height: 760px; transform: translate(-50%, -50%); pointer-events: none; opacity: .55; z-index: 0; }
+
+.top { position: relative; z-index: 2; display: flex; align-items: center; padding: 16px 20px 0; }
+body.native .top { height: 50px; padding: 0 14px 0 84px; }   /* room for the window's traffic lights */
+.brand { font: 12px var(--tiny); text-transform: uppercase; color: var(--muted); display: flex; align-items: center; gap: 10px; letter-spacing: .06em; }
+.brand i { width: 8px; height: 8px; background: transparent; }
+.brand i.on { background: var(--hear); box-shadow: 0 0 0 2px rgba(var(--hear-rgb), .25); animation: blink 1s steps(2) infinite; }
+@keyframes blink { 50% { opacity: .35; } }
+.spacer { flex: 1; }
+.ibtn { width: 36px; height: 36px; display: grid; place-items: center; color: var(--muted); }
+.ibtn:hover { color: var(--gold); }
+
+.dials { position: relative; z-index: 1; flex: 1; min-height: 0; display: grid; grid-template-columns: 1fr 44px 1fr; align-items: start; padding: 26px 18px 10px; gap: 6px; }
+.dial { --c: var(--hear); --rgb: var(--hear-rgb); display: flex; flex-direction: column; align-items: center; min-width: 0; }
+.dial.talk { --c: var(--talk); --rgb: var(--talk-rgb); }
+.label { font: 11px var(--tiny); text-transform: uppercase; color: var(--muted); margin-bottom: 12px; letter-spacing: .08em; }
+.dial.on .label { color: var(--c); }
+
+.dev { display: flex; align-items: center; gap: 8px; height: 30px; padding: 0 10px; color: var(--faint); max-width: 100%; background: var(--panel); margin-bottom: 4px;
+       box-shadow: 0 -3px 0 0 var(--line), 0 3px 0 0 var(--line), -3px 0 0 0 var(--line), 3px 0 0 0 var(--line); }
+.dial.on .dev { color: var(--c); box-shadow: 0 -3px 0 0 var(--c), 0 3px 0 0 var(--c), -3px 0 0 0 var(--c), 3px 0 0 0 var(--c); }
+.dev canvas { width: 64px; height: 20px; flex: none; }
+.dev span { font-size: 12px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 110px; }
+.dial.on .dev span { color: var(--ink); }
+
+/* language reel */
+.wheel { position: relative; width: 100%; max-width: 260px; height: 280px; touch-action: none; cursor: grab; outline: none; margin-top: 16px; overflow: hidden; background: var(--shadow);
+         box-shadow: 0 -4px 0 0 var(--line), 0 4px 0 0 var(--line), -4px 0 0 0 var(--line), 4px 0 0 0 var(--line), 0 10px 0 0 var(--shadow); }
+.dial.on .wheel { box-shadow: 0 -4px 0 0 var(--c), 0 4px 0 0 var(--c), -4px 0 0 0 var(--c), 4px 0 0 0 var(--c), 0 10px 0 0 var(--shadow); }
+.wheel:active { cursor: grabbing; }
+.wheel::before { content: ""; position: absolute; left: 0; right: 0; top: 50%; height: var(--item); margin-top: calc(var(--item) / -2); background: var(--panel2); }
+.wheel::after { content: "▶"; position: absolute; left: 8px; top: 50%; transform: translateY(-50%); font: 12px var(--tiny); color: var(--gold); pointer-events: none; }
+.dial.talk .wheel::after { content: "◀"; left: auto; right: 8px; }
+.drum { position: absolute; inset: 0; }
+.w-item { position: absolute; left: 0; right: 0; top: 50%; height: var(--item); margin-top: calc(var(--item) / -2); display: flex; flex-direction: column; align-items: center; justify-content: center;
+          font-size: 38px; font-weight: 600; color: var(--faint); white-space: nowrap; }
+.w-item small { font: 9px var(--tiny); color: transparent; margin-top: 1px; letter-spacing: .12em; }
+.w-item.on { color: var(--ink); text-shadow: 3px 3px 0 var(--shadow); }
+.w-item.on small { color: var(--c); text-shadow: none; }
+.wheel, .voices, .w-item, .v-item { -webkit-user-drag: none; }
+.w-item.off { font: 26px var(--tiny); }
+.w-item.off.on { color: var(--muted); }
+.wheel .shade { position: absolute; left: 0; right: 0; height: 52px; pointer-events: none; z-index: 2; }
+.wheel .shade.t { top: 0; background: linear-gradient(var(--shadow) 30%, transparent); } .wheel .shade.b { bottom: 0; background: linear-gradient(transparent, var(--shadow) 70%); }
+
+/* voice carousel */
+.voices { position: relative; width: 100%; max-width: 260px; height: 80px; margin-top: 26px; touch-action: none; cursor: grab; outline: none;
+          -webkit-mask-image: linear-gradient(90deg, transparent, #000 25%, #000 75%, transparent); mask-image: linear-gradient(90deg, transparent, #000 25%, #000 75%, transparent); }
+.voices:active { cursor: grabbing; }
+.v-item { position: absolute; left: 50%; top: 50%; width: 56px; height: 56px; margin: -28px 0 0 -28px; background-size: cover; image-rendering: pixelated; }
+.v-item.on { box-shadow: 0 -4px 0 0 var(--c), 0 4px 0 0 var(--c), -4px 0 0 0 var(--c), 4px 0 0 0 var(--c); }
+.v-item.auto { background: var(--panel2); }
+.v-item.auto::after { content: "?"; position: absolute; inset: 0; display: grid; place-items: center; font: 20px var(--tiny); color: var(--gold); }
+.vname { text-align: center; margin-top: 6px; min-height: 38px; }
+.vname b { display: block; font-size: 18px; font-weight: 600; }
+.vname small { display: block; font-size: 12px; color: var(--muted); }
+.spk { display: flex; gap: 8px; margin-top: 8px; min-height: 26px; flex-wrap: wrap; justify-content: center; }
+.spk button { display: inline-flex; align-items: center; gap: 6px; height: 24px; padding: 0 8px 0 3px; font-size: 12px; color: var(--muted); background: var(--panel);
+              box-shadow: 0 -2px 0 0 var(--line), 0 2px 0 0 var(--line), -2px 0 0 0 var(--line), 2px 0 0 0 var(--line); }
+.spk button.on { color: var(--ink); box-shadow: 0 -2px 0 0 var(--hear), 0 2px 0 0 var(--hear), -2px 0 0 0 var(--hear), 2px 0 0 0 var(--hear); }
+.spk button i { width: 18px; height: 18px; background-size: cover; image-rendering: pixelated; display: grid; place-items: center; font: 8px var(--tiny); font-style: normal; color: var(--gold); }
+
+/* voice stage */
+.stage { position: relative; display: flex; align-items: center; justify-content: center; gap: 4px; width: 100%; max-width: 290px; margin-top: 22px; }
+.stage::after { content: ""; position: absolute; left: 50%; bottom: -2px; width: 76px; height: 8px; margin-left: -38px; background: var(--panel2); pointer-events: none;
+                box-shadow: 0 -2px 0 0 var(--line), -4px 0 0 0 var(--line), 4px 0 0 0 var(--line), 0 4px 0 0 var(--shadow); }
+.dial.on .stage::after { box-shadow: 0 -2px 0 0 var(--c), -4px 0 0 0 var(--c), 4px 0 0 0 var(--c), 0 4px 0 0 var(--shadow); }
+.stage .voices { margin-top: 0; flex: 1; }
+.arrow { width: 22px; height: 30px; font: 11px var(--tiny); color: var(--faint); flex: none; }
+.arrow:hover { color: var(--gold); } .arrow:active { transform: translateY(1px); }
+.v-item.on { animation: bob 1.2s steps(2) infinite; }
+.v-item.on.talking { animation: talk .22s steps(2) infinite; }
+@keyframes bob { 50% { translate: 0 -3px; } }
+@keyframes talk { 50% { translate: 0 -6px; } }
+.vname { margin-top: 14px; min-height: 44px; padding: 5px 14px 6px; background: var(--panel); box-shadow: 0 -2px 0 0 var(--line), 0 2px 0 0 var(--line), -2px 0 0 0 var(--line), 2px 0 0 0 var(--line); }
+.vname b { font-size: 17px; } .vname small { font-size: 11px; }
+.vname { position: relative; }
+.star { position: absolute; right: -10px; top: -10px; width: 22px; height: 22px; font-size: 13px; color: var(--faint); background: var(--panel); box-shadow: 0 -2px 0 0 var(--line), 0 2px 0 0 var(--line), -2px 0 0 0 var(--line), 2px 0 0 0 var(--line); }
+.star:hover { color: var(--gold); } .star.on { color: var(--gold); }
+.spk .hint { font-size: 11.5px; color: var(--faint); }
+
+/* dialog box */
+.dialog { position: relative; z-index: 2; display: flex; align-items: center; gap: 12px; margin: 0 22px 54px; padding: 10px 14px; min-height: 52px; background: var(--panel);
+          box-shadow: 0 -4px 0 0 var(--line), 0 4px 0 0 var(--line), -4px 0 0 0 var(--line), 4px 0 0 0 var(--line), 0 9px 0 0 var(--shadow); }
+.dialog canvas { width: 30px; height: 30px; flex: none; }
+.dialog p { margin: 0; font-size: 15px; color: var(--ink); }
+.dialog p::after { content: "▌"; color: var(--gold); margin-left: 2px; animation: blink 1s steps(2) infinite; }
+.dialog p b { color: var(--gold); font-weight: 600; }
+.brand canvas { width: 20px; height: 20px; }
+
+.seam { position: relative; height: 280px; display: flex; align-items: center; justify-content: center; margin-top: 79px; }
+.seam::before { content: ""; position: absolute; top: 0; bottom: 0; left: 50%; width: 4px; margin-left: -2px; background: repeating-linear-gradient(var(--line) 0 4px, transparent 4px 12px); }
+.lag { position: relative; display: flex; flex-direction: column; align-items: center; background: var(--bg); padding: 8px 0; cursor: pointer; opacity: 0; transition: opacity .4s; }
+.lag.show { opacity: 1; }
+.lag b { font: 18px var(--tiny); }
+.lag small { font: 8px var(--tiny); color: var(--faint); margin-top: 2px; }
+.lag i { width: 6px; height: 6px; background: var(--faint); margin-bottom: 6px; }
+.lag.good i { background: var(--hear); } .lag.ok i { background: var(--gold); } .lag.slow i { background: var(--warn); }
+
+.drawer { position: fixed; left: 8px; right: 8px; bottom: 0; height: 72vh; background: var(--panel); transform: translateY(calc(100% - 38px)); transition: transform .3s steps(8); display: flex; flex-direction: column; z-index: 30;
+          box-shadow: 0 -4px 0 0 var(--line), -4px 0 0 0 var(--line), 4px 0 0 0 var(--line); }
+.drawer.open { transform: none; }
+.grab { position: relative; height: 38px; flex: none; display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; touch-action: none; color: var(--muted); font: 11px var(--tiny); letter-spacing: .08em; }
+.grab::before { content: "▲"; font-size: 9px; color: var(--gold); } .drawer.open .grab::before { content: "▼"; }
+.grab:hover { color: var(--ink); }
+.dbody { flex: 1; min-height: 0; overflow-y: auto; padding: 4px 18px 20px; user-select: text; }
+.dtab { width: 100%; border-collapse: collapse; font-size: 13px; margin: 4px 0 2px; }
+.dtab th { font: 9px var(--tiny); color: var(--faint); text-align: right; padding: 3px 4px; }
+.dtab td { text-align: right; padding: 3px 4px; font-weight: 600; }
+.dtab th:first-child, .dtab td:first-child { text-align: left; font-weight: 500; }
+.key::before { content: ""; display: inline-block; width: 8px; height: 8px; margin-right: 6px; }
+.key.them::before { background: var(--hear); } .key.you::before { background: var(--talk); }
+#chart { width: 100%; display: block; margin: 6px 0 4px; }
+#chart .grid { stroke: var(--line); stroke-dasharray: 4 4; } #chart .axis { fill: var(--faint); font: 9px var(--tiny); }
+#chart .s-in { stroke: var(--hear); fill: none; stroke-width: 3; } #chart .d-in { fill: var(--hear); }
+#chart .s-out { stroke: var(--talk); fill: none; stroke-width: 3; } #chart .d-out { fill: var(--talk); }
+.dhead { display: flex; align-items: center; margin: 14px 0 8px; font: 10px var(--tiny); color: var(--faint); }
+.dhead button { font: 10px var(--tiny); color: var(--muted); padding: 3px 8px; }
+.dhead button:hover { color: var(--gold); }
+.feed { display: flex; flex-direction: column; gap: 12px; }
+.msg { display: flex; gap: 10px; max-width: 90%; }
+.msg.you { align-self: flex-end; flex-direction: row-reverse; text-align: right; }
+.msg .dot { width: 24px; height: 24px; margin-top: 1px; flex: none; background-size: cover; image-rendering: pixelated; display: grid; place-items: center; font: 8px var(--tiny); color: var(--bg); }
+.dst { font-size: 16px; font-weight: 500; }
+.dst:empty::before { content: "..."; color: var(--faint); animation: blink 1s steps(2) infinite; }
+.src { font-size: 13px; color: var(--muted); margin-top: 2px; }
+.src.live { color: var(--faint); }
+.lat { font: 9px var(--tiny); color: var(--faint); margin-top: 4px; }
+.none { color: var(--faint); font-size: 14px; padding: 20px 0; text-align: center; }
+
+.scrim { position: fixed; inset: 0; background: rgba(8,5,18,.6); opacity: 0; pointer-events: none; transition: opacity .2s steps(4); z-index: 40; }
+.scrim.show { opacity: 1; pointer-events: auto; }
+.panel { position: fixed; top: 8px; right: 8px; bottom: 8px; width: min(380px, calc(100vw - 16px)); background: var(--panel); transform: translateX(110%); transition: transform .25s steps(6); overflow-y: auto; padding: 18px 18px 30px; z-index: 41; user-select: text;
+         box-shadow: 0 -4px 0 0 var(--line), 0 4px 0 0 var(--line), -4px 0 0 0 var(--line), 4px 0 0 0 var(--line); }
+.panel.show { transform: none; }
+.panel h3 { margin: 0; font: 13px var(--tiny); color: var(--gold); letter-spacing: .06em; }
+.ph { display: flex; align-items: center; }
+.done, .btn { font: 11px var(--tiny); padding: 7px 12px; background: var(--panel2); color: var(--ink); box-shadow: 0 -2px 0 0 var(--line), 0 2px 0 0 var(--line), -2px 0 0 0 var(--line), 2px 0 0 0 var(--line), 0 5px 0 0 var(--shadow); }
+.done:hover, .btn:hover { color: var(--gold); } .done:active, .btn:active { transform: translateY(2px); }
+.btn.warn { color: var(--warn); }
+.gt { font: 10px var(--tiny); color: var(--faint); margin: 22px 2px 8px; letter-spacing: .06em; }
+.group { background: var(--shadow); padding: 2px 12px; box-shadow: 0 -2px 0 0 var(--line), 0 2px 0 0 var(--line), -2px 0 0 0 var(--line), 2px 0 0 0 var(--line); }
+.field { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 0; border-bottom: 2px dashed var(--line); font-size: 14px; }
+.field:last-child { border-bottom: 0; }
+.field select { max-width: 58%; border: 0; background: transparent; color: var(--muted); text-align: right; outline: none; cursor: pointer; font-size: 13px; }
+.field select option { background: var(--panel); }
+.field.col { flex-direction: column; align-items: stretch; }
+.field small { display: block; color: var(--faint); font-size: 12px; margin-top: 2px; line-height: 1.4; }
+.field textarea { border: 0; background: var(--panel); padding: 8px 10px; font: 12px/1.5 ui-monospace, "SF Mono", Menlo, monospace; min-height: 130px; resize: vertical; }
+.field code { color: var(--muted); }
+.brow { display: flex; gap: 10px; padding: 12px 0; flex-wrap: wrap; align-items: center; }
+.sw { position: relative; width: 40px; height: 20px; flex: none; }
+.sw input { opacity: 0; position: absolute; }
+.sw span { position: absolute; inset: 0; background: var(--faint); cursor: pointer; }
+.sw span::after { content: ""; position: absolute; width: 14px; height: 14px; top: 3px; left: 3px; background: var(--ink); transition: transform .12s steps(3); }
+.sw input:checked + span { background: var(--hear); }
+.sw input:checked + span::after { transform: translateX(20px); background: var(--bg); }
+.url { font: 11px ui-monospace, "SF Mono", Menlo, monospace; background: var(--panel); padding: 6px 8px; overflow-wrap: anywhere; flex: 1; }
+
+.toast { position: fixed; left: 50%; top: 16px; transform: translate(-50%, -8px); background: var(--panel2); padding: 9px 14px; font-size: 14px; max-width: min(520px, 88vw); opacity: 0; pointer-events: none; transition: .15s steps(3); z-index: 60;
+         box-shadow: 0 -3px 0 0 var(--gold), 0 3px 0 0 var(--gold), -3px 0 0 0 var(--gold), 3px 0 0 0 var(--gold), 0 8px 0 0 var(--shadow); }
+.toast.show { opacity: 1; transform: translate(-50%, 0); }
+.toast.err { box-shadow: 0 -3px 0 0 var(--warn), 0 3px 0 0 var(--warn), -3px 0 0 0 var(--warn), 3px 0 0 0 var(--warn), 0 8px 0 0 var(--shadow); }
+
+@media (max-width: 540px) { :root { --item: 64px; --vstep: 58px; } .w-item { font-size: 27px; } .dials { grid-template-columns: 1fr 30px 1fr; padding: 0 12px 46px; } }
+</style>
+</head>
+<body>
+<canvas id="orb" width="190" height="190"></canvas>
+
+<header class="top">
+  <div class="brand"><canvas id="mascot" width="10" height="10"></canvas><span id="appname">Natter</span><i id="live-dot"></i></div>
+  <span class="spacer"></span>
+  <button class="ibtn" id="open-settings" title="Settings">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg></button>
+</header>
+
+<main class="dials">
+  <section class="dial hear" id="dial-in">
+    <div class="label">I hear</div>
+    <div class="dev" title="Translations play here"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 14v-2a9 9 0 0 1 18 0v2"/><rect x="3" y="14" width="5" height="7" rx="2"/><rect x="16" y="14" width="5" height="7" rx="2"/></svg>
+      <canvas id="wave-in" width="32" height="10"></canvas><span id="dev-in">Headphones</span></div>
+    <div class="wheel" id="wheel-in" title="Turn to a language to start hearing everything on your Mac in it. Off stops it."><div class="drum"></div></div>
+    <div class="stage"><button class="arrow" data-lane="in" data-d="-1">◀</button><div class="voices" id="voices-in" title="Drag or click to change the voice"></div><button class="arrow" data-lane="in" data-d="1">▶</button></div>
+    <div class="vname" id="vname-in"><button class="star" data-lane="in" title="Favourite this voice">★</button><b></b><small></small></div>
+    <div class="spk" id="spk-in"></div>
+  </section>
+
+  <div class="seam"><div class="lag" id="lag" title="How far the voice runs behind the speaker. Click for details."><i></i><b id="lag-num">—</b><small>sec</small></div></div>
+
+  <section class="dial talk" id="dial-out">
+    <div class="label">They hear</div>
+    <div class="dev" title="Your voice comes from here"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>
+      <canvas id="wave-out" width="32" height="10"></canvas><span id="dev-out">Microphone</span></div>
+    <div class="wheel" id="wheel-out" title="Turn to a language and people on your calls hear you in it. Off stops it."><div class="drum"></div></div>
+    <div class="stage"><button class="arrow" data-lane="out" data-d="-1">◀</button><div class="voices" id="voices-out" title="Drag or click to change your voice"></div><button class="arrow" data-lane="out" data-d="1">▶</button></div>
+    <div class="vname" id="vname-out"><button class="star" data-lane="out" title="Favourite this voice">★</button><b></b><small></small></div>
+    <div class="spk"></div>
+  </section>
+</main>
+
+<div class="dialog" id="dialog"><canvas id="mascot-big" width="10" height="10"></canvas><p id="say"></p></div>
+
+<section class="drawer" id="drawer">
+  <div class="grab" id="grab"><span>Transcript</span></div>
+  <div class="dbody">
+    <table class="dtab"><thead><tr><th></th>
+      <th title="From when the speaker starts a line to when you start hearing it translated">Start → voice</th>
+      <th title="From when the speaker stops to when you start hearing the translation">End → voice</th>
+      <th title="From when the speaker stops to when the translation finishes">End → done</th></tr></thead>
+      <tbody><tr><td><span class="key them">Them</span></td><td id="m-in-start">—</td><td id="m-in-lag">—</td><td id="m-in-end">—</td></tr>
+      <tr><td><span class="key you">You</span></td><td id="m-out-start">—</td><td id="m-out-lag">—</td><td id="m-out-end">—</td></tr></tbody></table>
+    <svg id="chart" height="80" preserveAspectRatio="none"></svg>
+    <div class="dhead">Transcript <span class="spacer"></span><button id="clear">Clear</button></div>
+    <div class="feed" id="feed"><div class="none" id="none">Nothing yet. Everything said and translated shows up here.</div></div>
+  </div>
+</section>
+
+<div class="scrim" id="scrim"></div>
+<aside class="panel" id="panel">
+  <div class="ph"><h3>Settings</h3><span class="spacer"></span><button class="done" id="close-settings">Done</button></div>
+  <div class="gt">Listening</div>
+  <div class="group">
+    <label class="field"><span>A voice for each speaker<small>Tells people apart on calls and videos. Adds about 0.5–1 s.</small></span><span class="sw"><input type="checkbox" id="diarize"><span></span></span></label>
+    <label class="field" id="mute-field"><span>Turn the original down<small id="mute-note">The translation on top, the original quietly underneath. Full volume comes back the moment you turn the dial to Off.</small></span><span class="sw"><input type="checkbox" id="mute"><span></span></span></label>
+    <label class="field" id="level-field">Original volume<select id="orig-level"><option value="0.1">10%</option><option value="0.25">25%</option><option value="0">Silent</option></select></label>
+  </div>
+  <div class="gt">Audio</div>
+  <div class="group">
+    <label class="field">Microphone<select id="mic"></select></label>
+    <label class="field">Hear translations on<select id="hear-out"></select></label>
+    <label class="field">Send your voice to<select id="speak-out"></select></label>
+    <label class="field"><span>Set up call apps automatically<small>Zoom, Meet and Slack pick up your translated voice</small></span><span class="sw"><input type="checkbox" id="auto-mic"><span></span></span></label>
+  </div>
+  <div class="gt">Subtitles</div>
+  <div class="group"><div class="brow"><span class="url">http://127.0.0.1:18765/captions?lane=all</span><button class="btn" id="open-subs">Open</button></div></div>
+  <div class="gt">Advanced</div>
+  <div class="group">
+    <label class="field">Translate after<select id="speed"><option value="min_latency">Short pauses (fastest)</option><option value="balanced">Normal pauses</option><option value="max_accuracy">Whole thoughts</option></select></label>
+    <label class="field">Translation model<select id="llm"></select></label>
+    <label class="field">Speech model<select id="stt"></select></label>
+    <label class="field col"><span>Instructions<small><code>{source}</code> and <code>{target}</code> are the languages, <code>{{turn}}</code> what was just said, <code>{{history_5}}</code> the last five lines.</small></span><textarea id="prompt" spellcheck="false"></textarea></label>
+    <div class="brow"><button class="btn" id="save-prompt">Save instructions</button><button class="btn" id="reset-prompt">Reset</button><span class="spacer"></span><button class="btn" id="test-sys">Test Mac audio</button></div>
+  </div>
+  <div class="brow" style="margin-top:18px"><span class="spacer"></span><button class="btn warn" id="quit">Quit Natter</button></div>
+</aside>
+<div class="toast" id="toast"></div>
+
+<script>
+const $ = s => document.querySelector(s);
+const NATIVE = { English: "English", Spanish: "Español", French: "Français", German: "Deutsch", Italian: "Italiano", Portuguese: "Português" };
+const CODE = { English: "EN", Spanish: "ES", French: "FR", German: "DE", Italian: "IT", Portuguese: "PT" };
+const SPK = "ABCD";
+let S, cfg, noBlackHole = false;
+const running = { in: false, out: false }, speaking = { in: false, out: false }, lvl = { in: 0, out: 0 };
+const rows = new Map(), heardSpeakers = new Map(), devName = { in: "", out: "" };
+
+const api = (path, body) => fetch(path, { method: "POST", headers: { "Content-Type": "application/json" }, body: body ? JSON.stringify(body) : undefined }).then(r => r.json());
+async function save(lane, patch, restart = true) { Object.assign(cfg[lane], patch); const j = await api("/api/config", { lane, config: patch, restart }); if (!j.ok) toast(j.error, true); return j; }
+const both = patch => Promise.all(["in", "out"].map(l => save(l, patch)));
+function toast(msg, err) { const t = $("#toast"); t.textContent = msg; t.className = "toast show" + (err ? " err" : ""); clearTimeout(t._h); t._h = setTimeout(() => t.className = "toast", err ? 6000 : 2400); }
+const esc = s => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/"/g, "&quot;");
+function fill(sel, items, value) {
+  sel.innerHTML = items.map(([v, t]) => `<option value="${esc(v)}">${esc(t)}</option>`).join("");
+  if (value !== undefined) { if (![...sel.options].some(o => o.value === value)) sel.insertAdjacentHTML("beforeend", `<option value="${esc(value)}">${esc(value)}</option>`); sel.value = value; }
+}
+
+/* ---------- voices ---------- */
+function allVoices() { const out = []; for (const [lang, vs] of Object.entries(S.options.voices)) for (const [id, label] of vs) out.push({ id, lang, label }); return out; }
+function voiceInfo(id) {
+  const v = allVoices().find(v => v.id === id), label = v?.label || String(id || "").replace(/^aai-/, "");
+  const m = label.match(/^([^(]+)\s*(?:\((.*)\))?/); return { name: (m?.[1] || label).trim(), desc: m?.[2] || "", lang: v?.lang || "" };
+}
+function hue(id) { let h = 0; for (const c of String(id)) h = (h * 31 + c.charCodeAt(0)) % 360; return h; }
+const spriteCache = {};
+function sprite(id) {  // a symmetric 10x10 pixel creature, seeded by the voice id
+  if (spriteCache[id]) return spriteCache[id];
+  let seed = 7; for (const ch of String(id)) seed = (seed * 131 + ch.charCodeAt(0)) >>> 0;
+  const rnd = () => (seed = (seed * 1103515245 + 12345) >>> 0) / 4294967296, h = hue(id), N = 10;
+  const c = document.createElement("canvas"); c.width = c.height = N; const g = c.getContext("2d");
+  const body = `hsl(${h} 80% 66%)`, shade = `hsl(${h} 60% 42%)`, light = `hsl(${h} 95% 84%)`;
+  const grid = [...Array(N)].map(() => Array(N).fill(0));
+  for (let y = 1; y < N - 1; y++) for (let x = 1; x < N / 2; x++) { const edge = y === 1 || y === N - 2 || x === 1; if (rnd() < (edge ? 0.5 : 0.85)) grid[y][x] = grid[y][N - 1 - x] = rnd() < 0.2 ? 2 : 1; }
+  for (let y = 3; y < 8; y++) for (let x = 3; x < 7; x++) grid[y][x] = 1;          // a solid face
+  grid[4][3] = grid[4][6] = 3; grid[2][4] = grid[2][5] = grid[2][4] || 4;           // eyes, a highlight
+  if (rnd() < 0.5) grid[6][4] = grid[6][5] = 5;                                      // a mouth, sometimes
+  const col = { 1: body, 2: shade, 3: "#17112b", 4: light, 5: shade };
+  for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) if (grid[y][x]) { g.fillStyle = col[grid[y][x]]; g.fillRect(x, y, 1, 1); }
+  return (spriteCache[id] = `url(${c.toDataURL()})`);
+}
+const dotBg = id => `${sprite(id)} center / cover no-repeat, hsl(${hue(id)} 40% 22%)`;
+let favorites = [];
+const voiceList = lang => { const vs = allVoices().filter(v => v.lang === lang);   // only voices for that language, favourites first
+  return [...vs.filter(v => favorites.includes(v.id)), ...vs.filter(v => !favorites.includes(v.id))]; };
+function speakerVoice(s) { return (cfg.in.speaker_voices || {})[s] || heardSpeakers.get(s) || (s === "A" ? cfg.in.voice : ""); }
+
+class VoiceStrip {  // a horizontal dial of voices
+  constructor(lane) { this.lane = lane; this.root = $("#voices-" + lane); this.target = "main"; this.pos = 0; this.drag = null; this.raf = 0;
+    this.STEP = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--vstep")) || 66;
+    this.root.tabIndex = 0;
+    // Mouse, trackpad or touch: press and drag sideways, or click. Move/up are tracked on the window so a drag
+    // keeps working when the pointer leaves the strip.
+    this.root.addEventListener("pointerdown", e => { e.preventDefault(); cancelAnimationFrame(this.raf); this.root.focus(); this.drag = { x: e.clientX, raw: this.pos, moved: 0 }; });
+    window.addEventListener("pointermove", e => { const d = this.drag; if (!d) return; d.raw -= (e.clientX - d.x) / this.STEP; d.moved += Math.abs(e.clientX - d.x); d.x = e.clientX; this.pos = this.soft(d.raw); this.draw(); });
+    const end = e => { const d = this.drag; this.drag = null; if (!d) return;
+      if (d.moved < 4) {  // a click: on a voice, go to it; elsewhere, step towards the side clicked
+        const it = e.target.closest?.(".v-item"), r = this.root.getBoundingClientRect();
+        const i = it && this.root.contains(it) ? +it.dataset.i : this.idx + (e.clientX < r.left + r.width / 2 ? -1 : 1);
+        return this.snap(i === this.idx && it ? this.idx + 1 : i);
+      }
+      this.snap(Math.round(this.pos)); };
+    window.addEventListener("pointerup", end); window.addEventListener("pointercancel", end);
+    this.root.addEventListener("wheel", e => { e.preventDefault(); cancelAnimationFrame(this.raf); this.pos = this.soft(this.pos + (e.deltaX || e.deltaY) / 70); this.draw(); clearTimeout(this.wt); this.wt = setTimeout(() => this.snap(Math.round(this.pos)), 140); }, { passive: false });
+    this.root.addEventListener("keydown", e => { if (e.key === "ArrowRight") this.snap(this.idx + 1); if (e.key === "ArrowLeft") this.snap(this.idx - 1); });
+  }
+  current() { return this.lane === "out" || this.target === "main" ? cfg[this.lane].voice : ((cfg.in.speaker_voices || {})[this.target] || ""); }
+  build() {
+    this.items = voiceList(cfg[this.lane].target).map(v => v.id);
+    if (this.lane === "in" && this.target !== "main") this.items.unshift("");   // "auto" for a speaker
+    this.root.innerHTML = this.items.map((id, i) => `<button class="v-item ${id ? "" : "auto"}" data-i="${i}" style="${id ? `background:${dotBg(id)}` : ""}"></button>`).join("");
+    this.els = [...this.root.children];
+    this.idx = Math.max(0, this.items.indexOf(this.current())); this.pos = this.idx; this.draw(); this.label();
+  }
+  soft(p) { const n = this.items.length - 1; return p < 0 ? p / 3 : p > n ? n + (p - n) / 3 : p; }
+  draw() { const near = Math.round(this.pos);
+    this.els.forEach((el, i) => { const d = i - this.pos, a = Math.abs(d);
+      el.style.visibility = a > 2.6 ? "hidden" : "visible";
+      el.style.transform = `translateX(${d * this.STEP}px) scale(${Math.max(0.45, 1 - a * 0.28)})`;
+      el.style.opacity = Math.max(0, 1 - a * 0.32); el.classList.toggle("on", i === near); });
+    if (near !== this.shown) { this.shown = near; this.label(this.items[Math.max(0, Math.min(this.items.length - 1, near))]); if (typeof showStar === "function") showStar(this.lane); } }
+  label(id = this.current()) {
+    const box = $("#vname-" + this.lane), i = voiceInfo(id);
+    box.querySelector("b").textContent = id ? i.name : "Automatic";
+    const tgt = this.lane === "in" && this.target !== "main" ? `Speaker ${this.target}` : "";
+    box.querySelector("small").textContent = [tgt, id ? i.desc : "a different voice for each speaker", id && i.lang && i.lang !== cfg[this.lane].target ? `${CODE[i.lang]} voice` : ""].filter(Boolean).join(" · ");
+  }
+  snap(t) { t = Math.max(0, Math.min(this.items.length - 1, t)); cancelAnimationFrame(this.raf);
+    const tick = () => { this.pos += (t - this.pos) * 0.25; this.draw(); if (Math.abs(t - this.pos) > 0.003) { this.raf = requestAnimationFrame(tick); return; }
+      this.pos = t; this.draw(); if (t !== this.idx) { this.idx = t; this.choose(this.items[t]); } };
+    this.raf = requestAnimationFrame(tick); }
+  async choose(id) {
+    if (this.lane === "in" && this.target !== "main") { const sv = { ...(cfg.in.speaker_voices || {}) }; if (id) sv[this.target] = id; else delete sv[this.target]; await save("in", { speaker_voices: sv }, false); }
+    else { (cfg[this.lane].voices_by_lang ||= {})[cfg[this.lane].target] = id; await save(this.lane, { voice: id }, false); }
+    renderSpeakers(); showStar(this.lane);
+  }
+}
+const strips = {};
+function renderSpeakers() {
+  const box = $("#spk-in"); if (!cfg.in.diarize) { box.innerHTML = ""; return; }
+  const seen = [...new Set([...heardSpeakers.keys(), ...Object.keys(cfg.in.speaker_voices || {})])].filter(x => SPK.includes(x)).sort();
+  if (!seen.length) { box.innerHTML = `<span class="hint">each new speaker gets their own critter</span>`; return; }
+  box.innerHTML = ["main", ...seen].map(t => { const v = t === "main" ? cfg.in.voice : speakerVoice(t);
+    return `<button data-t="${t}" class="${strips.in.target === t ? "on" : ""}"><i style="background:${v ? dotBg(v) : "var(--panel2)"}">${t === "main" ? "" : t}</i>${t === "main" ? "Main" : esc(v ? voiceInfo(v).name : "auto")}</button>`; }).join("");
+  box.querySelectorAll("button").forEach(b => b.onclick = () => { strips.in.target = b.dataset.t; strips.in.build(); renderSpeakers(); });
+}
+
+/* ---------- language dials (first stop is Off) ---------- */
+class Wheel {  // a looping reel: past the last language it comes round to Off again, like a gear
+  constructor(root, items, index, onSettle) {
+    Object.assign(this, { root, items, onSettle, n: items.length, pos: index, idx: index, vel: 0, raf: 0, drag: null });
+    this.ITEM = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--item")) || 80;
+    this.drum = root.querySelector(".drum"); root.insertAdjacentHTML("beforeend", '<i class="shade t"></i><i class="shade b"></i>');
+    this.drum.innerHTML = items.map((it, i) => `<div class="w-item ${it.value ? "" : "off"}" data-i="${i}">${esc(it.label)}<small>${esc(it.code)}</small></div>`).join("");
+    this.els = [...this.drum.children]; root.tabIndex = 0;
+    root.addEventListener("pointerdown", e => this.down(e));
+    window.addEventListener("pointermove", e => this.move(e));                     // on the window, so dragging
+    window.addEventListener("pointerup", e => this.up(e));                         // off the reel keeps working
+    window.addEventListener("pointercancel", e => this.up(e));
+    root.addEventListener("wheel", e => { e.preventDefault(); cancelAnimationFrame(this.raf); this.pos += e.deltaY / 90; this.draw(); clearTimeout(this.wt); this.wt = setTimeout(() => this.snap(), 140); }, { passive: false });
+    root.addEventListener("keydown", e => { if (e.key === "ArrowDown") this.step(1); if (e.key === "ArrowUp") this.step(-1); });
+    this.draw();
+  }
+  mod(i) { return ((i % this.n) + this.n) % this.n; }
+  near(i) { const cur = Math.round(this.pos); let d = this.mod(i - this.mod(cur)); if (d > this.n / 2) d -= this.n; return cur + d; }  // closest position showing item i
+  set(i) { if (this.drag) return; cancelAnimationFrame(this.raf); this.idx = i; const t = this.near(i);
+    const tick = () => { this.pos += (t - this.pos) * 0.2; this.draw(); if (Math.abs(t - this.pos) > 0.003) this.raf = requestAnimationFrame(tick); else { this.pos = t; this.draw(); } };
+    this.raf = requestAnimationFrame(tick); }
+  down(e) { e.preventDefault(); cancelAnimationFrame(this.raf); this.root.focus(); this.drag = { y: e.clientY, t: performance.now(), moved: 0 }; this.vel = 0; }
+  move(e) { const d = this.drag; if (!d) return; const now = performance.now(), dy = e.clientY - d.y, dt = Math.max(1, now - d.t);
+    this.pos -= dy / this.ITEM; d.moved += Math.abs(dy); d.y = e.clientY; d.t = now; this.vel = 0.8 * (-dy / this.ITEM / dt) + 0.2 * this.vel; this.draw(); }
+  up(e) {
+    const d = this.drag; if (!d) return; this.drag = null;
+    if (d.moved < 4) {  // a click: on a language, go to it; on the middle, step towards the half clicked
+      const it = e.target.closest?.(".w-item"), r = this.root.getBoundingClientRect(), i = it && this.root.contains(it) ? +it.dataset.i : -1;
+      return i >= 0 && i !== this.idx ? this.snap(this.near(i)) : this.step(e.clientY < r.top + r.height / 2 ? -1 : 1);
+    }
+    if (performance.now() - d.t > 80) this.vel = 0;
+    const tick = () => { this.pos += this.vel * 16; this.vel *= 0.9; this.draw(); if (Math.abs(this.vel) > 0.0015) this.raf = requestAnimationFrame(tick); else this.snap(); };
+    this.raf = requestAnimationFrame(tick);
+  }
+  step(k) { this.snap(Math.round(this.pos) + k); }
+  snap(target) {
+    cancelAnimationFrame(this.raf);
+    const t = target ?? Math.round(this.pos);
+    const tick = () => { this.pos += (t - this.pos) * 0.22; this.draw();
+      if (Math.abs(t - this.pos) > 0.002) { this.raf = requestAnimationFrame(tick); return; }
+      this.pos = t; this.draw(); const i = this.mod(t); if (i !== this.idx) { this.idx = i; this.onSettle(this.items[i].value); } };
+    this.raf = requestAnimationFrame(tick);
+  }
+  draw() { const near = this.mod(Math.round(this.pos));
+    this.els.forEach((el, i) => { let d = this.mod(i - this.pos); if (d > this.n / 2) d -= this.n;
+      el.style.visibility = Math.abs(d) > 2.2 ? "hidden" : "visible";
+      el.style.transform = `translateY(${Math.round(d * this.ITEM / 2) * 2}px)`; el.classList.toggle("on", i === near); }); }
+}
+const wheels = {}; let langItems = [];
+const ixOf = v => Math.max(0, langItems.findIndex(i => i.value === v));
+function buildWheels() {
+  langItems = [{ value: "", label: "Off", code: "" }, ...S.options.tts_languages.map(l => ({ value: l, label: NATIVE[l] || l, code: CODE[l] || "" }))];
+  wheels.in = new Wheel($("#wheel-in"), langItems, running.in ? ixOf(cfg.in.target) : 0, l => dialTo("in", l));
+  wheels.out = new Wheel($("#wheel-out"), langItems, running.out ? ixOf(cfg.out.target) : 0, l => dialTo("out", l));
+}
+const pickVoice = (lane, lang) => {  // the voice last used for this language, else a favourite, else the first
+  const saved = (cfg[lane].voices_by_lang || {})[lang]; if (saved && voiceInfo(saved).lang === lang) return saved;
+  return voiceList(lang)[0]?.id || cfg[lane].voice; };
+let pending = { in: 0, out: 0 };
+async function dialTo(lane, lang) {
+  const my = ++pending[lane];
+  if (!lang) { if (running[lane]) await api(`/api/stop/${lane}`); return; }
+  if (lane === "in") { await save("in", { target: lang, voice: pickVoice("in", lang) }, running.in); await save("out", { source: lang }, running.out); }
+  else await save("out", { target: lang, voice: pickVoice("out", lang) }, running.out);
+  strips[lane].build(); renderSpeakers();
+  if (my !== pending[lane]) return;              // the dial moved again meanwhile
+  if (!running[lane]) { const j = await api(`/api/start/${lane}`); if (!j.ok) { toast(j.error, true); wheels[lane].set(0); } }
+}
+
+/* ---------- device waveforms ---------- */
+const waves = { in: new Array(16).fill(0), out: new Array(16).fill(0) };
+let waveTick = 0;
+function drawWaves(t) {
+  if (t - waveTick > 60) { waveTick = t;
+    for (const lane of ["in", "out"]) {
+      // Headphones show the translation playing; the mic shows your voice going in.
+      const v = !running[lane] ? 0.1 : lane === "in" ? (speaking.in ? 0.35 + 0.45 * Math.abs(Math.sin(t / 90 + Math.random())) : lvl.in * 0.25) : lvl.out;
+      waves[lane].push(v); waves[lane].shift(); lvl[lane] *= 0.85;
+      document.querySelector(`#voices-${lane} .v-item.on`)?.classList.toggle("talking", running[lane] && speaking[lane]);
+    } }
+  for (const lane of ["in", "out"]) {
+    const c = $("#wave-" + lane), g = c.getContext("2d"), W = c.width, H = c.height, w = waves[lane], bw = W / w.length;
+    g.clearRect(0, 0, W, H); g.fillStyle = getComputedStyle($("#dial-" + lane)).getPropertyValue("--c") || "#fff";
+    g.globalAlpha = running[lane] ? 1 : 0.35;
+    w.forEach((v, i) => { const h = Math.max(1, Math.round(Math.min(1, v) * H / 2) * 2); g.fillRect(i * bw, (H - h) / 2, bw - 1, h); });
+  }
+}
+
+/* ---------- ambient orb ---------- */
+const orb = { li: 0, lo: 0 };
+function loop(t) {
+  const c = $("#orb"), g = c.getContext("2d"), W = c.width, H = c.height, cx = W / 2, cy = H / 2, sec = t / 1000;
+  orb.li += ((running.in ? (speaking.in ? 0.6 : lvl.in) : 0) - orb.li) * 0.08; orb.lo += ((running.out ? lvl.out : 0) - orb.lo) * 0.08;
+  g.clearRect(0, 0, W, H); g.globalCompositeOperation = "lighter";
+  const blob = (x, rgb, lv, on, ph) => {   // drawn at 1/4 scale, so the browser's pixelated upscale makes it chunky
+    const base = 37, amp = 1 + lv * 12 + (on ? 1.5 : 0), a = on ? 1 : 0.3;
+    for (let ring = 0; ring < 3; ring++) {
+      for (let k = 0; k < 90; k++) { const ang = k / 90 * Math.PI * 2;
+        const r = base + ring * 7 + Math.sin(ang * 3 + sec * (0.6 + ring * 0.25) + ph) * amp * 0.4 + Math.sin(ang * 5 - sec + ring) * amp * 0.2;
+        g.fillStyle = `rgba(${rgb},${(0.42 - ring * 0.12) * a})`; g.fillRect(Math.round(x + Math.cos(ang) * r), Math.round(cy + Math.sin(ang) * r), 1, 1); }
+    }
+  };
+  blob(cx - 18, "95,242,181", orb.li, running.in, 0); blob(cx + 18, "195,166,255", orb.lo, running.out, 2);
+  drawWaves(t); requestAnimationFrame(loop);
+}
+
+/* ---------- state ---------- */
+function deviceNames() {
+  const real = d => d && !/blackhole|zoomaudio|teams audio/i.test(d.name);
+  const defOut = S.devices.find(d => d.default_output && real(d)), defIn = S.devices.find(d => d.default_input && real(d));
+  const tidy = n => String(n).replace(/\s*[-–]\s*Find My$/i, "");
+  $("#dev-in").textContent = tidy(devName.in || cfg.in.output || defOut?.name || "Headphones");
+  $("#dev-out").textContent = tidy(devName.out || cfg.out.input || defIn?.name || "Microphone");
+}
+function renderState() {
+  updateSay();
+  for (const lane of ["in", "out"]) $("#dial-" + lane).classList.toggle("on", running[lane]);
+  $("#live-dot").classList.toggle("on", running.in || running.out);
+  if (noBlackHole) $("#dev-out").textContent = "Install BlackHole to talk";
+}
+
+/* ---------- transcript + timing ---------- */
+function row(lane, turn) {
+  const key = lane + ":" + (turn ?? "t" + Date.now());
+  if (!rows.has(key)) {
+    $("#none")?.remove();
+    const d = document.createElement("div"); d.className = "msg " + (lane === "out" ? "you" : "them");
+    d.innerHTML = `<span class="dot" style="background:${dotBg(cfg[lane].voice)}"></span><div><div class="dst"></div><div class="src"></div><div class="lat"></div></div>`;
+    $("#feed").appendChild(d); rows.set(key, d);
+    while ($("#feed").children.length > 300) $("#feed").firstElementChild.remove();
+    const b = $(".dbody"); if (b.scrollHeight - b.scrollTop - b.clientHeight < 140) requestAnimationFrame(() => b.scrollTop = b.scrollHeight);
+  }
+  return rows.get(key);
+}
+const lags = { in: [], out: [] }, marks = { in: { start: [], lag: [], end: [] }, out: { start: [], lag: [], end: [] } };
+const fmt = ms => (ms / 1000).toFixed(1) + " s";
+const median = a => { const b = [...a].sort((x, y) => x - y), n = b.length; return n ? (n % 2 ? b[(n - 1) / 2] : (b[n / 2 - 1] + b[n / 2]) / 2) : 0; };
+function showMarks(lane) { for (const k of ["start", "lag", "end"]) { const a = marks[lane][k].slice(-20); if (a.length) $(`#m-${lane}-${k}`).textContent = fmt(median(a)); } }
+function updateLag() { const r = [...marks.in.lag.slice(-8), ...marks.out.lag.slice(-8)]; if (!r.length) return; const v = median(r) / 1000;
+  $("#lag").className = "lag show " + (v < 2.5 ? "good" : v < 4.5 ? "ok" : "slow"); $("#lag-num").textContent = v.toFixed(1); }
+function latText(el) { const d = el.dataset, bits = [];
+  if (d.start) bits.push(`start→voice ${fmt(+d.start)}`); if (d.lag) bits.push(`end→voice ${fmt(+d.lag)}`); if (d.end) bits.push(`end→done ${fmt(+d.end)}`);
+  el.textContent = bits.join(" · ") + (d.parts ? `  (${d.parts})` : ""); }
+function drawChart() {
+  const svg = $("#chart"), W = svg.clientWidth || 500, H = 80, L = 26, T = 6, B = 14, all = [...lags.in, ...lags.out]; if (!all.length) return;
+  const t1 = Math.max(...all.map(p => p.t)), t0 = Math.min(...all.map(p => p.t), t1 - 30), ymax = Math.max(3, Math.ceil(Math.max(...all.map(p => p.v))));
+  const x = t => L + (W - L - 6) * (t - t0) / Math.max(1, t1 - t0), y = v => T + (H - T - B) * (1 - v / ymax), step = ymax > 6 ? 2 : 1; let g = "";
+  for (let v = 0; v <= ymax; v += step) g += `<line class="grid" x1="${L}" x2="${W - 6}" y1="${y(v)}" y2="${y(v)}"/><text class="axis" x="${L - 6}" y="${y(v) + 3}" text-anchor="end">${v}s</text>`;
+  for (const lane of ["in", "out"]) { const pts = lags[lane]; if (!pts.length) continue;
+    g += `<polyline class="s-${lane}" points="${pts.map(p => `${x(p.t).toFixed(1)},${y(p.v).toFixed(1)}`).join(" ")}"/>`;
+    g += pts.map(p => `<circle class="d-${lane}" r="3.5" cx="${x(p.t).toFixed(1)}" cy="${y(p.v).toFixed(1)}"><title>${p.v.toFixed(1)} s</title></circle>`).join(""); }
+  svg.setAttribute("viewBox", `0 0 ${W} ${H}`); svg.innerHTML = g;
+}
+
+function onEvent(m) {
+  const lane = m.lane;
+  switch (m.type) {
+    case "status":
+      running[lane] = !!m.running; if (!m.running) speaking[lane] = false;
+      if (m.running) devName[lane] = lane === "in" ? (m.output || [])[0] || "" : m.input || ""; else devName[lane] = "";
+      if (!m.running && wheels[lane] && wheels[lane].idx !== 0 && !wheels[lane].drag) wheels[lane].set(0);               // stopped from the menu bar or by an error
+      if (m.running && wheels[lane] && wheels[lane].idx === 0) wheels[lane].set(ixOf(cfg[lane].target));                  // started from the menu bar
+      deviceNames(); renderState(); if (m.error) toast(m.error, true); break;
+    case "level": lvl[lane] = Math.max(lvl[lane], m.value); if (speaking[lane] !== !!m.speaking) { speaking[lane] = !!m.speaking; updateSay(); } break;
+    case "partial": { const s = row(lane, m.turn).querySelector(".src"); s.textContent = m.text; s.className = "src live"; break; }
+    case "final": { const r = row(lane, m.turn), s = r.querySelector(".src"); s.textContent = m.text; s.className = "src";
+      if (m.speaker && lane === "in") { const b = r.querySelector(".dot"), v = speakerVoice(m.speaker); if (v) b.style.background = dotBg(v); b.title = "Speaker " + m.speaker; } break; }
+    case "translation": { const d = row(lane, m.turn).querySelector(".dst"); d.textContent = m.text || ""; break; }
+    case "speaker": if (lane === "in" && m.speaker) { heardSpeakers.set(m.speaker, m.voice); renderSpeakers(); } break;
+    case "lag": {
+      const r = row(lane, m.turn), sec = ms => (ms / 1000).toFixed(1) + " s";
+      const parts = [`heard ${sec(m.detect_ms)}`, m.llm_ms != null ? `translated ${sec(m.llm_ms)}` : null, `voice ${sec(m.tts_ms)}`, m.queue_ms > 50 ? `waited ${sec(m.queue_ms)}` : null].filter(Boolean);
+      const lat = r.querySelector(".lat"); Object.assign(lat.dataset, { start: m.start_ms, lag: m.lag_ms, parts: parts.join(" · ") }); latText(lat);
+      lags[lane].push({ t: performance.now() / 1000, v: m.lag_ms / 1000 }); if (lags[lane].length > 60) lags[lane].shift();
+      marks[lane].start.push(m.start_ms); marks[lane].lag.push(m.lag_ms); showMarks(lane); updateLag();
+      if ($("#drawer").classList.contains("open")) drawChart(); break; }
+    case "lag_end": { const lat = row(lane, m.turn).querySelector(".lat"); lat.dataset.end = m.end_ms; latText(lat); marks[lane].end.push(m.end_ms); showMarks(lane); break; }
+    case "notice": toast(m.message); break;
+    case "error": toast(m.message, true); break;
+  }
+}
+
+function say(html) { const p = $("#say"); if (p.dataset.html === html) return; p.dataset.html = html;
+  // type it out, a few characters a frame
+  const tmp = document.createElement("div"); tmp.innerHTML = html; const text = tmp.textContent; let i = 0; clearInterval(p._t);
+  p._t = setInterval(() => { i += 2; if (i >= text.length) { clearInterval(p._t); p.innerHTML = html; } else p.textContent = text.slice(0, i); }, 16); }
+function updateSay() {
+  const L = l => NATIVE[cfg[l].target] || cfg[l].target;
+  if (noBlackHole && !running.in) return say("To talk on calls, install <b>BlackHole</b> once: brew install blackhole-2ch");
+  if (running.in && running.out) return say(`You hear <b>${L("in")}</b>. They hear you in <b>${L("out")}</b>.`);
+  if (running.in) return say(speaking.in ? `Speaking to you in <b>${L("in")}</b>…` : `Listening to your Mac. You'll hear it in <b>${L("in")}</b>.`);
+  if (running.out) return say(speaking.out ? `Speaking <b>${L("out")}</b> to your call…` : `Listening to you. Your call hears <b>${L("out")}</b>.`);
+  say("Turn a dial to a language to start. Drag the critters to change voices.");
+}
+function drawMascots() {  // the app's own critter: green on the left, purple on the right
+  for (const id of ["mascot", "mascot-big"]) { const c = $("#" + id), g = c.getContext("2d");
+    const P = ["..GG..PP..", ".GGGGPPPP.", "GGGGGPPPPP", "GGKGGPPKPP", "GGGGGPPPPP", "GGWWWWWWPP", ".GGGGPPPP.", "..G.GP.P..", "..........", ".........."];
+    const col = { G: "#5ff2b5", P: "#c3a6ff", K: "#17112b", W: "#17112b" };
+    P.forEach((row, y) => [...row].forEach((ch, x) => { if (col[ch]) { g.fillStyle = col[ch]; g.fillRect(x, y + 1, 1, 1); } })); }
+}
+
+function shownVoice(lane) { const st = strips[lane]; return st?.items?.[Math.max(0, Math.min(st.items.length - 1, Math.round(st.pos)))] || cfg[lane].voice; }
+function showStar(lane) { const b = document.querySelector(`.star[data-lane="${lane}"]`), id = shownVoice(lane); b.classList.toggle("on", !!id && favorites.includes(id)); b.style.visibility = id ? "" : "hidden"; }
+async function toggleFavorite(lane) {
+  const id = shownVoice(lane); if (!id) return;
+  favorites = favorites.includes(id) ? favorites.filter(v => v !== id) : [...favorites, id];
+  await api("/api/prefs", { favorite_voices: favorites });
+  toast(favorites.includes(id) ? `★ ${voiceInfo(id).name} is a favourite` : `${voiceInfo(id).name} removed from favourites`);
+  strips[lane].build(); showStar(lane); const other = lane === "in" ? "out" : "in"; strips[other].build(); showStar(other);
+}
+
+function wire() {
+  document.querySelectorAll(".star").forEach(b => b.onclick = () => toggleFavorite(b.dataset.lane));
+  document.querySelectorAll(".arrow").forEach(b => b.onclick = () => { const st = strips[b.dataset.lane]; st.snap(st.idx + +b.dataset.d); });
+  $("#lag").onclick = () => { $("#drawer").classList.add("open"); drawChart(); };
+  const dr = $("#drawer"), grab = $("#grab"); let gy = null, moved = 0;
+  grab.addEventListener("pointerdown", e => { grab.setPointerCapture(e.pointerId); gy = e.clientY; moved = 0; });
+  grab.addEventListener("pointermove", e => { if (gy != null) moved = e.clientY - gy; });
+  grab.addEventListener("pointerup", () => { if (gy == null) return; gy = null; if (Math.abs(moved) < 6) dr.classList.toggle("open"); else dr.classList.toggle("open", moved < 0); if (dr.classList.contains("open")) drawChart(); });
+  $("#clear").onclick = () => { $("#feed").innerHTML = ""; rows.clear(); };
+  $("#diarize").onchange = async e => { await save("in", { diarize: e.target.checked }); if (!e.target.checked) { strips.in.target = "main"; strips.in.build(); } renderSpeakers(); };
+  $("#mute").onchange = e => { save("in", { mute_original: e.target.checked }); $("#level-field").style.display = e.target.checked ? "" : "none"; };
+  $("#orig-level").onchange = e => save("in", { original_level: parseFloat(e.target.value) });
+  $("#mic").onchange = e => { save("out", { input: e.target.value }); deviceNames(); };
+  $("#hear-out").onchange = e => { save("in", { output: e.target.value }); deviceNames(); };
+  $("#speak-out").onchange = e => save("out", { output: e.target.value });
+  $("#auto-mic").onchange = e => save("out", { auto_mic: e.target.checked });
+  $("#speed").onchange = e => both({ mode: e.target.value });
+  $("#llm").onchange = e => both({ llm_model: e.target.value });
+  $("#stt").onchange = e => both({ stt_model: e.target.value });
+  $("#save-prompt").onclick = async () => { await both({ prompt: $("#prompt").value, preset: "Custom" }); toast("Instructions saved"); };
+  $("#reset-prompt").onclick = async () => { const p = S.options.presets.Translate; $("#prompt").value = p; await both({ prompt: p, preset: "Translate" }); toast("Back to the default translation"); };
+  $("#open-settings").onclick = () => { $("#panel").classList.add("show"); $("#scrim").classList.add("show"); };
+  $("#close-settings").onclick = $("#scrim").onclick = () => { $("#panel").classList.remove("show"); $("#scrim").classList.remove("show"); };
+  $("#open-subs").onclick = () => window.open("/captions?bg=1", "subtitles", "width=1100,height=320");
+  $("#test-sys").onclick = async () => { toast("Playing a test sound…"); const j = await api("/api/test/system");
+    j.ok ? toast("Mac audio works.") : toast("Can't hear your Mac. Allow Natter in System Settings → Privacy & Security → Screen & System Audio Recording.", true); };
+  $("#quit").onclick = async () => { await api("/api/quit"); document.body.innerHTML = '<div style="margin:auto;color:#8a8f9c;letter-spacing:.2em;text-transform:uppercase;font-size:11px">Natter has quit</div>'; };
+}
+function renderSettings() {
+  const ins = S.devices.filter(d => d.inputs > 0 && !/blackhole|zoomaudio|teams audio/i.test(d.name)).map(d => [d.name, d.name]);
+  const outs = S.devices.filter(d => d.outputs > 0).map(d => [d.name, d.name]);
+  $("#diarize").checked = !!cfg.in.diarize; $("#mute").checked = !!cfg.in.mute_original && !!S.mute_device;
+  $("#orig-level").value = String(cfg.in.original_level ?? 0.1); $("#level-field").style.display = $("#mute").checked ? "" : "none";
+  if (!S.mute_device) { $("#mute").disabled = true; $("#mute-field").style.opacity = .55; $("#mute-note").innerHTML = "Needs a second silent device, once: <code>brew install blackhole-16ch</code>, then reopen the app."; }
+  fill($("#mic"), [["", "Automatic"], ...ins], cfg.out.input);
+  fill($("#hear-out"), [["", "Automatic"], ...outs.filter(([n]) => !/blackhole/i.test(n))], cfg.in.output);
+  fill($("#speak-out"), outs.map(([n]) => [n, /blackhole/i.test(n) ? `${n} (call apps)` : n]), cfg.out.output);
+  $("#auto-mic").checked = cfg.out.auto_mic !== false; $("#speed").value = cfg.in.mode || "min_latency";
+  fill($("#llm"), S.options.llm_models.map(m => [m, m]), cfg.in.llm_model);
+  fill($("#stt"), S.options.stt_models.map(m => [m, m]), cfg.in.stt_model);
+  $("#prompt").value = cfg.in.prompt;
+}
+function connect() { const ws = new WebSocket(`ws://${location.host}/ws`); ws.onmessage = e => onEvent(JSON.parse(e.data)); ws.onclose = () => setTimeout(connect, 1000); }
+
+(async () => {
+  if (new URLSearchParams(location.search).has("native")) document.body.classList.add("native");
+  S = await (await fetch("/api/state")).json(); cfg = S.config.lanes; favorites = S.config.favorite_voices || [];
+  noBlackHole = !S.devices.some(d => /blackhole/i.test(d.name));
+  running.in = !!S.running.in; running.out = !!S.running.out;
+  // Translation is the only mode in the window; a custom prompt from Settings still applies.
+  if (cfg.in.preset && cfg.in.preset !== "Translate" && cfg.in.preset !== "Custom") both({ preset: "Translate", prompt: S.options.presets.Translate });
+  buildWheels(); strips.in = new VoiceStrip("in"); strips.out = new VoiceStrip("out"); strips.in.build(); strips.out.build();
+  renderSpeakers(); deviceNames(); renderState(); renderSettings(); wire(); connect(); drawMascots(); showStar("in"); showStar("out");
+  requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>

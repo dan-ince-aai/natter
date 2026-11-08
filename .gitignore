@@ -1,0 +1,10 @@
+# secrets and personal settings
+.env
+config.json
+logs/
+# build output
+bin/
+*.app/
+__pycache__/
+*.pyc
+.DS_Store

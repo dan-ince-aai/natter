@@ -39,11 +39,20 @@ calls ([how we worked it out](https://dan-ince-aai.github.io/natter/#hours)).
 
 ## Get started
 
+**Fastest:** paste this into Terminal. It downloads the latest Natter, checks it, installs it and opens it, with no
+security prompts ([see the script](docs/install.sh)):
+
+```sh
+curl -fsSL https://dan-ince-aai.github.io/natter/install.sh | bash
+```
+
+**Or download the app:**
+
 1. [**Download Natter.dmg**](https://github.com/dan-ince-aai/natter/releases/latest/download/Natter.dmg) and drag
    Natter to Applications. (Apple silicon, macOS 14.4 or later.)
 2. Open it. macOS will say it can't check the app (it isn't notarised yet). Click **Done**, then go to **System
    Settings → Privacy & Security**, scroll down and click **Open Anyway**. Or, in Terminal:
-   `xattr -dr com.apple.quarantine /Applications/Natter.app`
+   `/usr/bin/xattr -dr com.apple.quarantine /Applications/Natter.app`
 3. Paste your AssemblyAI API key ([get a free key](https://www.assemblyai.com/dashboard/api-keys)). It's kept in your
    Keychain.
 4. Turn a dial. Allow microphone and system audio when macOS asks.

@@ -73,4 +73,5 @@ if [ "$SIGN_ID" != "-" ]; then
     spctl --assess --type open --context context:primary-signature -v "$OUT/Natter.dmg"
   fi
 fi
+(cd "$OUT" && shasum -a 256 Natter.dmg > Natter.dmg.sha256)   # install.sh checks the download against this
 echo "Built $OUT/Natter.dmg ($(du -h "$OUT/Natter.dmg" | cut -f1)), app $(du -sh "$APP" | cut -f1)"

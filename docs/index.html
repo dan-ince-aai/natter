@@ -152,6 +152,14 @@ footer a { color: var(--muted); text-decoration: none; } footer a:hover { color:
 
 .hero .sub { margin: 20px 0 0 !important; font-size: 15px; color: var(--faint) !important; }
 .hero .sub a { color: var(--muted); }
+
+.oneline { padding: 20px 22px; margin-bottom: 8px; display: flex; flex-direction: column; gap: 14px;
+           box-shadow: 0 -4px 0 0 var(--hear), 0 4px 0 0 var(--hear), -4px 0 0 0 var(--hear), 4px 0 0 0 var(--hear), 0 10px 0 0 var(--shadow) !important; }
+.oneline b { display: block; font: 13px var(--tiny); color: var(--hear); letter-spacing: .06em; margin-bottom: 4px; }
+.oneline span { color: var(--muted); font-size: 15px; }
+.oneline .cmd { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; }
+.oneline .cmd code { flex: 1; min-width: 260px; font-size: 15px; padding: 12px 14px; user-select: all; overflow-x: auto; white-space: nowrap; }
+.oneline .btn { padding: 10px 16px; font-size: 12px; }
 </style>
 </head>
 <body>
@@ -173,7 +181,7 @@ footer a { color: var(--muted); text-decoration: none; } footer a:hover { color:
       <div class="ctas">
         <a class="btn" href="https://github.com/dan-ince-aai/natter/releases/latest/download/Natter.dmg">▼ Download free for Mac</a>
       </div>
-      <p class="sub">Free and open source · macOS 14.4+ · <a href="#hours">about 50 hours of translation free</a></p>
+      <p class="sub">Free and open source · macOS 14.4+ · <a href="#install">or install with one line</a> · <a href="#hours">about 50 hours free</a></p>
     </div>
     <div class="stage px" id="stage" aria-label="Pixel critters chatting in different languages while Natter translates between them"></div>
   </header>
@@ -278,8 +286,11 @@ await tts.send(json.dumps({<span class="s">"type"</span>: <span class="s">"Gener
   <section id="install">
     <h3>FREE DOWNLOAD, READY IN A MINUTE</h3>
     <p class="lead">You'll need an <a href="https://www.assemblyai.com/dashboard/api-keys">AssemblyAI API key</a>.</p>
+    <div class="oneline px"><div><b>FASTEST: PASTE THIS INTO TERMINAL</b><span>Downloads the latest Natter, checks it, installs it and opens it. No security prompts. <a href="install.sh">See the script</a></span></div>
+      <div class="cmd"><code id="cmd">curl -fsSL https://dan-ince-aai.github.io/natter/install.sh | bash</code><button class="btn" id="copy">Copy</button></div></div>
+    <p class="lead" style="margin-top:26px">Or download the app:</p>
     <div class="steps">
-      <div class="step px"><h4>Download</h4><p>Open <code>Natter.dmg</code> and drag Natter to Applications. The first time, macOS says it can't check the app: click Done, then System Settings → Privacy &amp; Security → Open Anyway (or run <code>xattr -dr com.apple.quarantine /Applications/Natter.app</code>).</p></div>
+      <div class="step px"><h4>Download</h4><p>Open <code>Natter.dmg</code> and drag Natter to Applications. The first time, macOS says it can't check the app: click Done, then System Settings → Privacy &amp; Security → Open Anyway (or run <code>/usr/bin/xattr -dr com.apple.quarantine /Applications/Natter.app</code>).</p></div>
       <div class="step px"><h4>Paste your key</h4><p>Natter asks for your AssemblyAI key on first launch and keeps it in your Keychain. Allow microphone and system audio when asked.</p></div>
       <div class="step px"><h4>Turn a dial</h4><p>That's it. To talk on calls, add the free BlackHole driver once: <code>brew install blackhole-2ch blackhole-16ch</code>.</p></div>
     </div>
@@ -369,6 +380,9 @@ async function scene(k) {
 }
 (async () => { for (let k = 0; ; k = (k + 1) % PAIRS.length) await scene(k); })();
 document.querySelectorAll("canvas[data-flag]").forEach(c => flag(c, c.dataset.flag));
+const cp = document.getElementById("copy");
+if (cp) cp.onclick = async () => { try { await navigator.clipboard.writeText(document.getElementById("cmd").textContent); cp.textContent = "Copied!"; setTimeout(() => cp.textContent = "Copy", 1600); } catch { cp.textContent = "Select it"; } };
+
 // "Every speaker gets their own voice": a meeting where each speaker is heard in their own critter voice.
 const SEATS = [
   ["MARCOS", "aai-titus", "TITUS", "Empezamos con los precios.", "Let's start with pricing."],

@@ -124,6 +124,12 @@ footer a { color: var(--muted); text-decoration: none; } footer a:hover { color:
 .note { color: var(--faint); font-size: 14px; max-width: 820px; margin: 0 0 90px; }
 @media (max-width: 820px) { .langs { grid-template-columns: repeat(3, 1fr); } .hours { grid-template-columns: 1fr; } }
 @media (max-width: 480px) { .stage { height: 400px; } .pod { width: 100px; } .pod canvas.crit { width: 76px; height: 76px; } .pod .plat { width: 92px; } .bub { font-size: 18px; } }
+
+.now { display: inline-flex; align-items: center; gap: 10px; font: 11px var(--tiny); color: var(--hear); letter-spacing: .08em; margin-bottom: 18px; padding: 6px 10px; background: rgba(95,242,181,.08);
+       box-shadow: 0 -2px 0 0 rgba(95,242,181,.4), 0 2px 0 0 rgba(95,242,181,.4), -2px 0 0 0 rgba(95,242,181,.4), 2px 0 0 0 rgba(95,242,181,.4); }
+.now i { width: 8px; height: 8px; background: var(--hear); animation: blink 1s steps(2) infinite; }
+@keyframes blink { 50% { opacity: .3; } }
+.quick { margin: 18px 0 0 !important; font-size: 15px; color: var(--ink) !important; }
 </style>
 </head>
 <body>
@@ -132,19 +138,22 @@ footer a { color: var(--muted); text-decoration: none; } footer a:hover { color:
     <a class="brand" href="#"><img src="assets/mascot.png" alt="">NATTER</a>
     <span class="sp"></span>
     <a class="l" href="#install">Install</a><a class="l" href="#languages">Languages</a><a class="l" href="#built">How it's built</a>
-    <a class="btn ghost" style="padding:10px 14px;font-size:11px" href="https://github.com/dan-ince-aai/natter">GitHub</a>
+<a class="l" href="https://github.com/dan-ince-aai/natter">GitHub</a>
+    <a class="btn" style="padding:10px 14px;font-size:11px" href="https://github.com/dan-ince-aai/natter/releases/latest/download/Natter.dmg">▼ Download free</a>
   </nav>
 
   <header class="hero">
     <div>
+      <div class="now"><i></i>AVAILABLE NOW · FREE FOR MAC</div>
       <h1>NATTER</h1>
       <h2>Hear anyone.<br>Speak their language.</h2>
       <p>Turn a dial and anything your Mac plays (a call, a stream, a video, a meeting) is spoken into your ears in your
         language. Turn the other and the people on your call hear you in theirs. Live, in any app.</p>
       <div class="ctas">
-        <a class="btn" href="https://github.com/dan-ince-aai/natter/releases/latest/download/Natter.dmg">▼ Download for Mac</a>
+        <a class="btn" href="https://github.com/dan-ince-aai/natter/releases/latest/download/Natter.dmg">▼ Download free for Mac</a>
         <a class="btn ghost" href="https://github.com/dan-ince-aai/natter">★ Star on GitHub</a>
       </div>
+      <p class="quick">Free download. Up and running in about a minute: open it, paste your AssemblyAI key, turn a dial.</p>
       <div class="free"><b>≈ 50 HOURS FREE</b><span>New AssemblyAI accounts get $50 of credit, no card needed. <a href="#hours">How we worked it out</a></span></div>
       <small>FREE · OPEN SOURCE (MIT) · macOS 14.4+ · APPLE SILICON · BRING YOUR OWN ASSEMBLYAI KEY</small>
     </div>
@@ -222,7 +231,7 @@ footer a { color: var(--muted); text-decoration: none; } footer a:hover { color:
   </section>
 
   <section id="install">
-    <h3>INSTALL IN A MINUTE</h3>
+    <h3>FREE DOWNLOAD, READY IN A MINUTE</h3>
     <p class="lead">You'll need an <a href="https://www.assemblyai.com/dashboard/api-keys">AssemblyAI API key</a>.</p>
     <div class="steps">
       <div class="step px"><h4>Download</h4><p>Open <code>Natter.dmg</code> and drag Natter to Applications. The first time, macOS may say it can't check the app: open System Settings → Privacy &amp; Security → Open Anyway.</p></div>
@@ -232,10 +241,10 @@ footer a { color: var(--muted); text-decoration: none; } footer a:hover { color:
   </section>
 
   <div class="final px">
-    <h3>FREE. OPEN SOURCE. EXTENDABLE.</h3>
-    <p>Natter is MIT-licensed. Read the code, change the prompt, add voices, or build something new on its local API.</p>
+    <h3>DOWNLOAD NATTER FREE, TODAY.</h3>
+    <p>Free, open source and ready in about a minute. Bring your AssemblyAI key (new accounts get about 50 hours of translation free) and start understanding everyone.</p>
     <div style="display:flex;gap:18px;justify-content:center;flex-wrap:wrap">
-      <a class="btn" href="https://github.com/dan-ince-aai/natter/releases/latest/download/Natter.dmg">▼ Download for Mac</a>
+      <a class="btn" href="https://github.com/dan-ince-aai/natter/releases/latest/download/Natter.dmg">▼ Download free for Mac</a>
       <a class="btn ghost" href="https://github.com/dan-ince-aai/natter">View the code</a>
     </div>
   </div>

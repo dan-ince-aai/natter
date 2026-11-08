@@ -14,7 +14,7 @@ call, a livestream, a video, a meeting) is spoken into your headphones in your l
 people on your call hear *you* in theirs. Every voice is a little pixel critter you can swap on the fly.
 
 <p align="center">
-  <a href="https://github.com/dan-ince-aai/natter/releases/latest/download/Natter.dmg"><b>▼ Download for Mac</b></a> ·
+  <a href="https://github.com/dan-ince-aai/natter/releases/latest/download/Natter.dmg"><b>▼ Download free for Mac</b></a> (ready in about a minute) ·
   <a href="https://dan-ince-aai.github.io/natter/">Website</a> ·
   <a href="docs/assets/natter-ad.mp4">Watch the 60-second video</a>
 </p>

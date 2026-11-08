@@ -144,6 +144,11 @@ footer a { color: var(--muted); text-decoration: none; } footer a:hover { color:
 .seat .said em { display: block; font-style: normal; color: var(--ink); font-size: 16px; margin-top: 2px; }
 .seat.on .said { opacity: 1; }
 @media (max-width: 820px) { .meet { grid-template-columns: repeat(2, 1fr); } }
+
+.code { padding: 4px; margin-bottom: 22px; }
+.code pre { margin: 0; padding: 20px 22px; background: var(--shadow); color: var(--ink); font: 14px/1.6 ui-monospace, "SF Mono", Menlo, monospace; overflow-x: auto; -webkit-font-smoothing: antialiased; }
+.code .c { color: var(--faint); } .code .s { color: var(--hear); }
+.devctas { display: flex; gap: 18px; flex-wrap: wrap; margin-bottom: 20px; }
 </style>
 </head>
 <body>
@@ -151,7 +156,7 @@ footer a { color: var(--muted); text-decoration: none; } footer a:hover { color:
   <nav>
     <a class="brand" href="#"><img src="assets/mascot.png" alt="">NATTER</a>
     <span class="sp"></span>
-    <a class="l" href="#install">Install</a><a class="l" href="#speakers">Voices</a><a class="l" href="#languages">Languages</a><a class="l" href="#built">How it's built</a>
+    <a class="l" href="#install">Install</a><a class="l" href="#speakers">Voices</a><a class="l" href="#languages">Languages</a><a class="l" href="#developers">Developers</a>
 <a class="l" href="https://github.com/dan-ince-aai/natter">GitHub</a>
     <a class="btn" style="padding:10px 14px;font-size:11px" href="https://github.com/dan-ince-aai/natter/releases/latest/download/Natter.dmg">▼ Download free</a>
   </nav>
@@ -249,6 +254,26 @@ footer a { color: var(--muted); text-decoration: none; } footer a:hover { color:
       <div class="say px"><div class="who">THEY HEAR · NATURAL</div><div class="txt">“Sí, no te preocupes, amigo, puedo gestionar ese reembolso hoy mismo, no es nada.”</div></div>
       <div class="say b px"><div class="who">THEY HEAR · YOUR BRAND VOICE</div><div class="txt">“No se preocupe, podemos gestionar ese reembolso por usted hoy mismo. Nos alegra poder ayudarle.”</div></div>
     </div>
+  </section>
+
+  <section id="developers">
+    <h3>FOR DEVELOPERS: BUILD IT INTO YOUR APP</h3>
+    <p class="lead">Natter is open source, so take the pattern. Real-time translation with AssemblyAI is one streaming
+      session for speech-to-text <i>and</i> translation, plus one for the voice. The whole loop fits in about 100 lines.</p>
+    <div class="code px"><pre><span class="c"># one WebSocket: speech-to-text + translation on every turn</span>
+stt = connect(<span class="s">"wss://streaming.assemblyai.com/v3/ws"</span>,
+    speech_model=<span class="s">"universal-3-6-pro"</span>, mode=<span class="s">"min_latency"</span>,
+    llm_gateway=json.dumps({
+        <span class="s">"model"</span>: <span class="s">"gemini-2.5-flash-lite"</span>,
+        <span class="s">"prompt"</span>: <span class="s">"Translate into natural Spanish: {{turn}}"</span>,
+    }))
+<span class="c"># each translation arrives as an LLMGatewayResponse: send it to TTS and play it</span>
+await tts.send(json.dumps({<span class="s">"type"</span>: <span class="s">"Generate"</span>, <span class="s">"text"</span>: translation}))</pre></div>
+    <div class="devctas">
+      <a class="btn" href="https://github.com/dan-ince-aai/natter/blob/main/examples/realtime_translate.py">See the 100-line example</a>
+      <a class="btn ghost" href="https://github.com/dan-ince-aai/natter">Clone the repo</a>
+    </div>
+    <p class="note">Ideas: a browser extension that dubs any tab, a phone-line interpreter, live stream subtitles, a Windows port, a support desk where every agent speaks every language.</p>
   </section>
 
   <section id="install">

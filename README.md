@@ -23,6 +23,35 @@ people on your call hear *you* in theirs. Every voice is a little pixel critter 
 
 <img src="assets/divider.png" width="100%" alt="">
 
+## Build this into your app
+
+Real-time translation with AssemblyAI is one WebSocket for speech-to-text **and** translation, plus one for the voice.
+The trick is the `llm_gateway` parameter: it runs your prompt on every finished turn, on the same streaming session.
+
+```python
+stt = connect("wss://streaming.assemblyai.com/v3/ws",
+    sample_rate=16000, encoding="pcm_s16le", speech_model="universal-3-6-pro", mode="min_latency",
+    llm_gateway=json.dumps({
+        "model": "gemini-2.5-flash-lite",
+        "prompt": "Translate what the speaker just said into natural Spanish. Reply with only the translation.\n\n{{turn}}",
+    }))
+# ...stream mic audio in; each translation arrives as an LLMGatewayResponse message.
+# Send it to wss://tts.us.assemblyai.com/v1/ws as {"type": "Generate", "text": ...} + {"type": "Flush"} and play the audio.
+```
+
+[`examples/realtime_translate.py`](examples/realtime_translate.py) is the whole loop in about 100 lines: mic → speech-to-text +
+translation → text-to-speech → speakers. It's the core of Natter without the app:
+
+```sh
+pip install websockets sounddevice numpy
+export ASSEMBLYAI_API_KEY=your-key   # https://www.assemblyai.com/dashboard/api-keys
+python examples/realtime_translate.py --to Spanish --voice aai-antonioluis   # wear headphones
+```
+
+**Ideas to build with it:** a browser extension that dubs any tab, a phone-line interpreter (Twilio or SIP in, translated
+audio out), live subtitles for streams, a Windows or Linux port of Natter, a support desk where every agent speaks every
+language. If you build something, open an issue and tell us.
+
 ## What you can do with it
 
 | | |
